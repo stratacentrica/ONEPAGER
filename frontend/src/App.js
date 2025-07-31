@@ -63,7 +63,8 @@ function App() {
   const [emailConfig, setEmailConfig] = useState({
     to: '',
     subject: '',
-    message: ''
+    message: '',
+    format: 'html'
   });
   const [viewCount, setViewCount] = useState(Math.floor(Math.random() * 1000) + 100);
   
