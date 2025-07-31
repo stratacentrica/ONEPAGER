@@ -1101,12 +1101,20 @@ function App() {
                         />
                       </div>
                       <div>
-                        <Label>Message</Label>
-                        <Textarea
-                          value={emailConfig.message}
-                          onChange={(e) => setEmailConfig({...emailConfig, message: e.target.value})}
-                          placeholder="Here's your custom landing page..."
-                        />
+                        <Label>Email Format</Label>
+                        <Select
+                          value={emailConfig.format}
+                          onValueChange={(value) => setEmailConfig({...emailConfig, format: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="html">📄 HTML File</SelectItem>
+                            <SelectItem value="json">📊 JSON Data</SelectItem>
+                            <SelectItem value="iframe">🖼️ Embed Code</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <Button 
                         onClick={sendEmail} 
