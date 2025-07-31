@@ -1101,6 +1101,14 @@ function App() {
                         />
                       </div>
                       <div>
+                        <Label>Message</Label>
+                        <Textarea
+                          value={emailConfig.message}
+                          onChange={(e) => setEmailConfig({...emailConfig, message: e.target.value})}
+                          placeholder="Here's your custom landing page..."
+                        />
+                      </div>
+                      <div>
                         <Label>Email Format</Label>
                         <Select
                           value={emailConfig.format}
