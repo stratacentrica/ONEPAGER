@@ -461,11 +461,19 @@ function App() {
 
     try {
       setIsLoading(true);
-      // This would integrate with an email service
-      alert(`📧 Email sent to ${emailConfig.to} with your landing page!`);
+      const response = await axios.post(`${API_BASE_URL}/api/pages/${currentPage.id}/email`, {
+        page_id: currentPage.id,
+        to_email: emailConfig.to,
+        subject: emailConfig.subject,
+        message: emailConfig.message,
+        format: emailConfig.format || 'html'
+      });
+      
+      alert(`📧 Success! ${response.data.message}`);
       setEmailDialogOpen(false);
     } catch (error) {
       console.error('Email send error:', error);
+      alert(`❌ Email failed: ${error.response?.data?.detail || error.message}`);
     } finally {
       setIsLoading(false);
     }
