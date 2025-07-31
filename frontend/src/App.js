@@ -46,6 +46,7 @@ function App() {
   const [backgroundColor, setBackgroundColor] = useState('#1a1a2e');
   const [theme, setTheme] = useState('dark');
   const [royaltyFreeSounds, setRoyaltyFreeSounds] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [ftpDialogOpen, setFtpDialogOpen] = useState(false);
   const [ftpConfig, setFtpConfig] = useState({
     host: '',
