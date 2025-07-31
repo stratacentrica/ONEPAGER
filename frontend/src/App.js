@@ -604,6 +604,65 @@ function App() {
                   <Code size={16} className="mr-2" />
                   Embed
                 </Button>
+                <Dialog open={ftpDialogOpen} onOpenChange={setFtpDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="glass-button">
+                      <Upload size={16} className="mr-2" />
+                      FTP Upload
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="glass-panel">
+                    <DialogHeader>
+                      <DialogTitle>FTP Upload to HostGator</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>FTP Host</Label>
+                        <Input
+                          value={ftpConfig.host}
+                          onChange={(e) => setFtpConfig({...ftpConfig, host: e.target.value})}
+                          placeholder="ftp.yourdomain.com"
+                        />
+                      </div>
+                      <div>
+                        <Label>Username</Label>
+                        <Input
+                          value={ftpConfig.username}
+                          onChange={(e) => setFtpConfig({...ftpConfig, username: e.target.value})}
+                          placeholder="your-ftp-username"
+                        />
+                      </div>
+                      <div>
+                        <Label>Password</Label>
+                        <Input
+                          type="password"
+                          value={ftpConfig.password}
+                          onChange={(e) => setFtpConfig({...ftpConfig, password: e.target.value})}
+                          placeholder="your-ftp-password"
+                        />
+                      </div>
+                      <div>
+                        <Label>Remote Path</Label>
+                        <Input
+                          value={ftpConfig.remote_path}
+                          onChange={(e) => setFtpConfig({...ftpConfig, remote_path: e.target.value})}
+                          placeholder="/public_html/"
+                        />
+                      </div>
+                      <Button 
+                        onClick={uploadViaFTP} 
+                        className="w-full glass-button primary"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Uploading...' : 'Upload to Server'}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <div className="view-counter glass-effect">
+                  <Eye size={14} className="mr-1" />
+                  <span>{viewCount.toLocaleString()}</span>
+                </div>
               </>
             )}
             <Button
