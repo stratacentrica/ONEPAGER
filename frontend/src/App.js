@@ -306,7 +306,7 @@ function App() {
           <Tag
             key={component.id}
             style={commonStyle}
-            onClick={() => setSelectedComponent(component)}
+            onClick={(e) => handleComponentClick(component, e)}
             className={`component glass-effect ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
             {content.text || 'Your text here'}
