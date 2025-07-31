@@ -32,7 +32,9 @@ import {
   Settings,
   Mail,
   Zap,
-  MessageSquare
+  MessageSquare,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -73,16 +75,33 @@ function App() {
     vignette: 0
   });
   
-  // Dynamic light effect state
-  const [lightEffect, setLightEffect] = useState({
+  // Shimmer effect state
+  const [shimmerEffect, setShimmerEffect] = useState({
     enabled: false,
     intensity: 50,
-    speed: 1000,
+    frequency: 5000, // milliseconds
     color: '#ffffff'
   });
   
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Google Fonts list
+  const googleFonts = [
+    'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 
+    'Source Sans Pro', 'Poppins', 'Oswald', 'Raleway', 'Ubuntu',
+    'Nunito', 'Playfair Display', 'Merriweather', 'PT Sans', 'Crimson Text'
+  ];
+
+  // Free chatbot providers
+  const chatbotProviders = [
+    { id: 'elevenlabs', name: 'ElevenLabs AI', type: 'custom' },
+    { id: 'tidio', name: 'Tidio Chat', type: 'free' },
+    { id: 'crisp', name: 'Crisp Chat', type: 'free' },
+    { id: 'tawk', name: 'Tawk.to', type: 'free' },
+    { id: 'zendesk', name: 'Zendesk Chat', type: 'free' },
+    { id: 'intercom', name: 'Intercom', type: 'free' }
+  ];
 
   // Component types available in the builder
   const componentTypes = [
@@ -94,7 +113,21 @@ function App() {
     { id: 'video', name: 'Video', icon: Video, description: 'Video embeds' },
     { id: 'logo', name: 'Logo', icon: ImageIcon, description: 'Brand logos and images' },
     { id: 'chatbot', name: 'AI Chat', icon: MessageSquare, description: 'ElevenLabs AI Bot' },
+    { id: 'livechat', name: 'Live Chat', icon: Bot, description: 'Free Chat Providers' },
   ];
+
+  // Load Google Fonts
+  useEffect(() => {
+    const loadGoogleFonts = () => {
+      googleFonts.forEach(font => {
+        const link = document.createElement('link');
+        link.href = `https://fonts.googleapis.com/css2?family=${font.replace(' ', '+')}:wght@300;400;500;600;700&display=swap`;
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      });
+    };
+    loadGoogleFonts();
+  }, []);
 
   // Load initial data
   useEffect(() => {
@@ -107,19 +140,22 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Dynamic light effect
+  // Shimmer effect
   useEffect(() => {
-    if (!lightEffect.enabled) return;
+    if (!shimmerEffect.enabled) return;
     
     const interval = setInterval(() => {
-      const lightElement = document.querySelector('.dynamic-light');
-      if (lightElement) {
-        lightElement.style.opacity = Math.random() * (lightEffect.intensity / 100);
+      const shimmerElement = document.querySelector('.shimmer-overlay');
+      if (shimmerElement) {
+        shimmerElement.classList.add('shimmer-active');
+        setTimeout(() => {
+          shimmerElement.classList.remove('shimmer-active');
+        }, 2000);
       }
-    }, lightEffect.speed);
+    }, shimmerEffect.frequency);
     
     return () => clearInterval(interval);
-  }, [lightEffect]);
+  }, [shimmerEffect]);
 
   const fetchPages = async () => {
     try {
@@ -183,9 +219,9 @@ function App() {
   const getDefaultContent = (type) => {
     switch (type) {
       case 'text':
-        return { text: 'Your text here', tag: 'p' };
+        return { text: 'Your text here', tag: 'p', fontFamily: 'Inter', allCaps: false };
       case 'button':
-        return { text: 'Click Me', action: 'alert("Button clicked!")' };
+        return { text: 'Click Me', action: 'alert("Button clicked!")', fontFamily: 'Inter', allCaps: false };
       case 'form':
         return { fields: [{ name: 'email', type: 'email', placeholder: 'Enter your email' }] };
       case 'timer':
@@ -202,6 +238,15 @@ function App() {
           placeholder: 'Ask me anything...',
           greeting: 'Hello! How can I help you today?'
         };
+      case 'livechat':
+        return {
+          provider: 'tidio',
+          widgetId: '',
+          customization: {
+            theme: 'dark',
+            position: 'bottom-right'
+          }
+        };
       default:
         return {};
     }
@@ -210,15 +255,15 @@ function App() {
   const getDefaultStyle = (type) => {
     const baseStyle = {
       color: theme === 'dark' ? '#ffffff' : '#000000',
-      background: 'rgba(255, 255, 255, 0.1)',
+      background: 'rgba(192, 192, 192, 0.1)', // Changed to silverish
       borderRadius: '12px',
       backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)'
+      border: '1px solid rgba(192, 192, 192, 0.2)' // Changed to silverish
     };
 
     switch (type) {
       case 'text':
-        return { ...baseStyle, fontSize: 16, fontWeight: 'normal' };
+        return { ...baseStyle, fontSize: 16, fontWeight: 'normal', fontFamily: 'Inter' };
       case 'button':
         return { 
           ...baseStyle, 
@@ -226,13 +271,21 @@ function App() {
           fontSize: 14, 
           fontWeight: 'medium',
           cursor: 'pointer',
-          transition: 'all 0.3s ease'
+          transition: 'all 0.3s ease',
+          fontFamily: 'Inter'
         };
       case 'chatbot':
         return {
           ...baseStyle,
           width: '300px',
           height: '400px',
+          padding: '16px'
+        };
+      case 'livechat':
+        return {
+          ...baseStyle,
+          width: '280px',
+          height: '350px',
           padding: '16px'
         };
       default:
@@ -395,12 +448,18 @@ function App() {
 
   const renderComponent = (component) => {
     const { type, content, position, style } = component;
+    const fontStyle = {
+      fontFamily: content.fontFamily || 'Inter',
+      textTransform: content.allCaps ? 'uppercase' : 'none'
+    };
+    
     const commonStyle = {
       position: 'absolute',
       left: `${position.x}px`,
       top: `${position.y}px`,
       cursor: 'move',
-      ...style
+      ...style,
+      ...fontStyle
     };
 
     switch (type) {
@@ -481,6 +540,33 @@ function App() {
           </div>
         );
 
+      case 'livechat':
+        const provider = chatbotProviders.find(p => p.id === content.provider) || chatbotProviders[1];
+        return (
+          <div
+            key={component.id}
+            style={commonStyle}
+            onClick={(e) => handleComponentClick(component, e)}
+            className={`component glass-effect livechat-widget ${selectedComponent?.id === component.id ? 'selected' : ''}`}
+          >
+            <div className="livechat-header">
+              <Bot size={16} />
+              <span>{provider.name}</span>
+            </div>
+            <div className="livechat-content">
+              <div className="chat-preview">
+                <div className="chat-bubble">
+                  Hi! How can we help you today?
+                </div>
+              </div>
+              <div className="chat-input">
+                <input placeholder="Type your message..." disabled />
+                <button>Send</button>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div
@@ -513,74 +599,109 @@ function App() {
         </div>
 
         <div className="properties-content">
-          {selectedComponent.type === 'text' && (
+          {(selectedComponent.type === 'text' || selectedComponent.type === 'button') && (
             <>
               <div className="property-group">
-                <Label>Text Content</Label>
-                <Textarea
-                  value={selectedComponent.content.text || ''}
-                  onChange={(e) => updateComponent(selectedComponent.id, {
-                    content: { ...selectedComponent.content, text: e.target.value }
-                  })}
-                  placeholder="Enter your text..."
-                />
+                <Label>{selectedComponent.type === 'text' ? 'Text Content' : 'Button Text'}</Label>
+                {selectedComponent.type === 'text' ? (
+                  <Textarea
+                    value={selectedComponent.content.text || ''}
+                    onChange={(e) => updateComponent(selectedComponent.id, {
+                      content: { ...selectedComponent.content, text: e.target.value }
+                    })}
+                    placeholder="Enter your text..."
+                  />
+                ) : (
+                  <Input
+                    value={selectedComponent.content.text || ''}
+                    onChange={(e) => updateComponent(selectedComponent.id, {
+                      content: { ...selectedComponent.content, text: e.target.value }
+                    })}
+                    placeholder="Button text..."
+                  />
+                )}
               </div>
+              
               <div className="property-group">
-                <Label>Tag</Label>
+                <Label>Font Family</Label>
                 <Select
-                  value={selectedComponent.content.tag || 'p'}
+                  value={selectedComponent.content.fontFamily || 'Inter'}
                   onValueChange={(value) => updateComponent(selectedComponent.id, {
-                    content: { ...selectedComponent.content, tag: value }
+                    content: { ...selectedComponent.content, fontFamily: value },
+                    style: { ...selectedComponent.style, fontFamily: value }
                   })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="h1">Heading 1</SelectItem>
-                    <SelectItem value="h2">Heading 2</SelectItem>
-                    <SelectItem value="h3">Heading 3</SelectItem>
-                    <SelectItem value="p">Paragraph</SelectItem>
+                    {googleFonts.map(font => (
+                      <SelectItem key={font} value={font}>{font}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="property-group">
-                <Label>Font Size</Label>
-                <Slider
-                  value={[selectedComponent.style.fontSize || 16]}
-                  onValueChange={(value) => updateComponent(selectedComponent.id, {
-                    style: { ...selectedComponent.style, fontSize: value[0] }
-                  })}
-                  min={12}
-                  max={72}
-                  step={1}
-                />
-              </div>
-            </>
-          )}
 
-          {selectedComponent.type === 'button' && (
-            <>
               <div className="property-group">
-                <Label>Button Text</Label>
-                <Input
-                  value={selectedComponent.content.text || ''}
-                  onChange={(e) => updateComponent(selectedComponent.id, {
-                    content: { ...selectedComponent.content, text: e.target.value }
-                  })}
-                  placeholder="Button text..."
-                />
+                <div className="all-caps-toggle">
+                  <Label>ALL CAPS</Label>
+                  <Switch
+                    checked={selectedComponent.content.allCaps || false}
+                    onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
+                      content: { ...selectedComponent.content, allCaps: checked }
+                    })}
+                  />
+                </div>
               </div>
-              <div className="property-group">
-                <Label>Action (JavaScript)</Label>
-                <Textarea
-                  value={selectedComponent.content.action || ''}
-                  onChange={(e) => updateComponent(selectedComponent.id, {
-                    content: { ...selectedComponent.content, action: e.target.value }
-                  })}
-                  placeholder="alert('Hello!');"
-                />
-              </div>
+
+              {selectedComponent.type === 'text' && (
+                <>
+                  <div className="property-group">
+                    <Label>Tag</Label>
+                    <Select
+                      value={selectedComponent.content.tag || 'p'}
+                      onValueChange={(value) => updateComponent(selectedComponent.id, {
+                        content: { ...selectedComponent.content, tag: value }
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="h1">Heading 1</SelectItem>
+                        <SelectItem value="h2">Heading 2</SelectItem>
+                        <SelectItem value="h3">Heading 3</SelectItem>
+                        <SelectItem value="p">Paragraph</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="property-group">
+                    <Label>Font Size</Label>
+                    <Slider
+                      value={[selectedComponent.style.fontSize || 16]}
+                      onValueChange={(value) => updateComponent(selectedComponent.id, {
+                        style: { ...selectedComponent.style, fontSize: value[0] }
+                      })}
+                      min={12}
+                      max={72}
+                      step={1}
+                    />
+                  </div>
+                </>
+              )}
+
+              {selectedComponent.type === 'button' && (
+                <div className="property-group">
+                  <Label>Action (JavaScript)</Label>
+                  <Textarea
+                    value={selectedComponent.content.action || ''}
+                    onChange={(e) => updateComponent(selectedComponent.id, {
+                      content: { ...selectedComponent.content, action: e.target.value }
+                    })}
+                    placeholder="alert('Hello!');"
+                  />
+                </div>
+              )}
             </>
           )}
 
@@ -614,6 +735,41 @@ function App() {
                     content: { ...selectedComponent.content, placeholder: e.target.value }
                   })}
                   placeholder="Ask me anything..."
+                />
+              </div>
+            </>
+          )}
+
+          {selectedComponent.type === 'livechat' && (
+            <>
+              <div className="property-group">
+                <Label>Chat Provider</Label>
+                <Select
+                  value={selectedComponent.content.provider || 'tidio'}
+                  onValueChange={(value) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, provider: value }
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {chatbotProviders.map(provider => (
+                      <SelectItem key={provider.id} value={provider.id}>
+                        {provider.name} ({provider.type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="property-group">
+                <Label>Widget ID</Label>
+                <Input
+                  value={selectedComponent.content.widgetId || ''}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, widgetId: e.target.value }
+                  })}
+                  placeholder="your-widget-id"
                 />
               </div>
             </>
@@ -712,21 +868,8 @@ function App() {
               className="logo-watermark"
             />
           </div>
-          {lightEffect.enabled && (
-            <div 
-              className="dynamic-light"
-              style={{
-                position: 'absolute',
-                top: '20%',
-                left: '80%',
-                width: '200px',
-                height: '200px',
-                background: `radial-gradient(circle, ${lightEffect.color} 0%, transparent 70%)`,
-                borderRadius: '50%',
-                pointerEvents: 'none',
-                zIndex: 1
-              }}
-            />
+          {shimmerEffect.enabled && (
+            <div className="shimmer-overlay" />
           )}
           {currentPage.components?.map(renderComponent)}
         </div>
@@ -1022,44 +1165,47 @@ function App() {
                 <Separator />
 
                 <div className="effect-group">
-                  <div className="dynamic-light-header">
-                    <Label>Dynamic Light Effect</Label>
+                  <div className="shimmer-header">
+                    <Label>
+                      <Sparkles size={16} className="inline mr-2" />
+                      Page Shimmer Effect
+                    </Label>
                     <Switch
-                      checked={lightEffect.enabled}
-                      onCheckedChange={(checked) => setLightEffect({...lightEffect, enabled: checked})}
+                      checked={shimmerEffect.enabled}
+                      onCheckedChange={(checked) => setShimmerEffect({...shimmerEffect, enabled: checked})}
                     />
                   </div>
                   
-                  {lightEffect.enabled && (
+                  {shimmerEffect.enabled && (
                     <>
-                      <div className="light-controls">
-                        <Label>Intensity ({lightEffect.intensity}%)</Label>
+                      <div className="shimmer-controls">
+                        <Label>Intensity ({shimmerEffect.intensity}%)</Label>
                         <Slider
-                          value={[lightEffect.intensity]}
-                          onValueChange={(value) => setLightEffect({...lightEffect, intensity: value[0]})}
+                          value={[shimmerEffect.intensity]}
+                          onValueChange={(value) => setShimmerEffect({...shimmerEffect, intensity: value[0]})}
                           min={0}
                           max={100}
                           step={5}
                         />
                       </div>
                       
-                      <div className="light-controls">
-                        <Label>Speed ({lightEffect.speed}ms)</Label>
+                      <div className="shimmer-controls">
+                        <Label>Frequency ({shimmerEffect.frequency/1000}s)</Label>
                         <Slider
-                          value={[lightEffect.speed]}
-                          onValueChange={(value) => setLightEffect({...lightEffect, speed: value[0]})}
-                          min={100}
-                          max={3000}
-                          step={100}
+                          value={[shimmerEffect.frequency]}
+                          onValueChange={(value) => setShimmerEffect({...shimmerEffect, frequency: value[0]})}
+                          min={2000}
+                          max={15000}
+                          step={1000}
                         />
                       </div>
 
-                      <div className="light-controls">
-                        <Label>Light Color</Label>
+                      <div className="shimmer-controls">
+                        <Label>Shimmer Color</Label>
                         <Input
                           type="color"
-                          value={lightEffect.color}
-                          onChange={(e) => setLightEffect({...lightEffect, color: e.target.value})}
+                          value={shimmerEffect.color}
+                          onChange={(e) => setShimmerEffect({...shimmerEffect, color: e.target.value})}
                         />
                       </div>
                     </>
@@ -1104,21 +1250,8 @@ function App() {
                   className="logo-watermark"
                 />
               </div>
-              {lightEffect.enabled && (
-                <div 
-                  className="dynamic-light"
-                  style={{
-                    position: 'absolute',
-                    top: '20%',
-                    left: '80%',
-                    width: '200px',
-                    height: '200px',
-                    background: `radial-gradient(circle, ${lightEffect.color} 0%, transparent 70%)`,
-                    borderRadius: '50%',
-                    pointerEvents: 'none',
-                    zIndex: 1
-                  }}
-                />
+              {shimmerEffect.enabled && (
+                <div className="shimmer-overlay" />
               )}
               {currentPage.components?.map(renderComponent)}
               

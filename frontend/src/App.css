@@ -20,36 +20,36 @@ body {
   background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
 }
 
-/* Glass Morphism Effects */
+/* Glass Morphism Effects - NO PINK/PURPLE EVER */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(192, 192, 192, 0.05); /* Silverish */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(192, 192, 192, 0.1);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .glass-effect {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(192, 192, 192, 0.08); /* Silverish */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(192, 192, 192, 0.15);
   border-radius: 12px;
   transition: all 0.3s ease;
 }
 
 .glass-effect:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(192, 192, 192, 0.12);
   transform: translateY(-2px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .glass-button {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(192, 192, 192, 0.1); /* Silverish */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(192, 192, 192, 0.2);
   border-radius: 12px;
   color: #ffffff;
   font-weight: 500;
@@ -58,24 +58,24 @@ body {
 }
 
 .glass-button:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(192, 192, 192, 0.15);
   transform: translateY(-1px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 .glass-button.primary {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(147, 51, 234, 0.8) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(96, 165, 250, 0.8) 100%); /* Blue gradient, NO PURPLE */
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .glass-button.primary:hover {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(147, 51, 234, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(96, 165, 250, 0.9) 100%);
 }
 
 /* Header - Fixed Layout Issues */
 .app-header {
   padding: 1rem 2rem;
-  margin: 1rem 1rem 0 1rem;  /* Fixed: proper margin spacing */
+  margin: 1rem 1rem 0 1rem;
   border-radius: 16px;
 }
 
@@ -83,7 +83,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 2rem;  /* Added gap for better spacing */
+  gap: 2rem;
 }
 
 .brand {
@@ -102,7 +102,7 @@ body {
 .brand-text h1 {
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); /* Blue gradient, NO PURPLE */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -142,11 +142,11 @@ body {
 
 /* Sidebar - Fixed Border Radius */
 .sidebar {
-  width: 300px;  /* Increased width for Effects tab */
+  width: 300px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  border-radius: 16px;  /* Fixed: proper border radius */
+  border-radius: 16px;
 }
 
 .sidebar-tabs {
@@ -197,15 +197,22 @@ body {
   font-size: 0.875rem;
 }
 
-/* Effects Controls */
-.dynamic-light-header {
+/* Font Styling Controls */
+.all-caps-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Shimmer Effect Controls */
+.shimmer-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
 }
 
-.light-controls {
+.shimmer-controls {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -226,7 +233,7 @@ body {
   overflow: hidden;
   min-height: 600px;
   background-attachment: fixed;
-  transition: filter 0.3s ease;  /* Smooth effect transitions */
+  transition: filter 0.3s ease;
 }
 
 .canvas-empty-state {
@@ -270,7 +277,7 @@ body {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); /* Blue gradient, NO PURPLE */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -301,6 +308,28 @@ body {
   opacity: 0.6;
 }
 
+/* Shimmer Effect - NEW! */
+.shimmer-overlay {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+  transition: left 2s ease-in-out;
+}
+
+.shimmer-overlay.shimmer-active {
+  left: 100%;
+}
+
 /* Components on Canvas */
 .component {
   min-width: 100px;
@@ -315,12 +344,12 @@ body {
 }
 
 .component:hover {
-  border-color: rgba(59, 130, 246, 0.5);
+  border-color: rgba(59, 130, 246, 0.5); /* Blue, NO PURPLE */
   transform: scale(1.02);
 }
 
 .component.selected {
-  border-color: #3b82f6;
+  border-color: #3b82f6; /* Blue, NO PURPLE */
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
@@ -331,7 +360,7 @@ body {
 .timer-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #60a5fa;
+  color: #60a5fa; /* Blue, NO PURPLE */
 }
 
 .timer-label {
@@ -364,7 +393,7 @@ body {
   padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-weight: 600;
-  color: #60a5fa;
+  color: #60a5fa; /* Blue, NO PURPLE */
 }
 
 .chatbot-content {
@@ -397,7 +426,7 @@ body {
 
 .chat-input button {
   padding: 0.5rem;
-  background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); /* Blue gradient, NO PURPLE */
   border: none;
   border-radius: 8px;
   color: #ffffff;
@@ -407,13 +436,79 @@ body {
   justify-content: center;
 }
 
+/* Live Chat Widget - NEW! */
+.livechat-widget {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 1rem;
+  min-width: 260px;
+  min-height: 320px;
+}
+
+.livechat-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+  color: #60a5fa; /* Blue, NO PURPLE */
+}
+
+.livechat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.chat-preview {
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.chat-bubble {
+  background: rgba(192, 192, 192, 0.15); /* Silverish */
+  padding: 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+}
+
+.livechat-content .chat-input {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.livechat-content .chat-input input {
+  flex: 1;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.875rem;
+}
+
+.livechat-content .chat-input button {
+  padding: 0.5rem 1rem;
+  background: rgba(192, 192, 192, 0.2); /* Silverish */
+  border: 1px solid rgba(192, 192, 192, 0.3);
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
 /* Properties Sidebar - Fixed Border Radius */
 .properties-sidebar {
   width: 300px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  border-radius: 16px;  /* Fixed: proper border radius */
+  border-radius: 16px;
 }
 
 .properties-panel {
@@ -476,15 +571,6 @@ body {
 /* Background Effects */
 .background-vignette {
   transition: background 0.3s ease;
-}
-
-.dynamic-light {
-  animation: lightFlicker 2s ease-in-out infinite alternate;
-}
-
-@keyframes lightFlicker {
-  0% { opacity: 0.1; }
-  100% { opacity: 0.8; }
 }
 
 /* Responsive Design */
