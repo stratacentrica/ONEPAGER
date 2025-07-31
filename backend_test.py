@@ -217,11 +217,17 @@ class ONEderpageAPITester:
             print("❌ No page ID available for export test")
             return False
             
+        export_data = {
+            "page_id": self.created_page_id,
+            "format": "html"
+        }
+            
         success, response = self.run_test(
             "Export Page",
             "POST",
             f"api/pages/{self.created_page_id}/export",
             200,
+            data=export_data,
             response_type='html'
         )
         
