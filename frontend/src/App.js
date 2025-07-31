@@ -200,6 +200,15 @@ function App() {
     updatePage({ components: updatedComponents });
   };
 
+  const updateComponent = (componentId, updates) => {
+    if (!currentPage) return;
+
+    const updatedComponents = currentPage.components.map(comp =>
+      comp.id === componentId ? { ...comp, ...updates } : comp
+    );
+    updatePage({ components: updatedComponents });
+  };
+
   const handleComponentDrag = (componentId, e) => {
     if (!currentPage) return;
     
