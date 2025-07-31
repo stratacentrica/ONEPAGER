@@ -34,7 +34,15 @@ import {
   Zap,
   MessageSquare,
   Bot,
-  Sparkles
+  Sparkles,
+  Phone,
+  UserPlus,
+  Bell,
+  ListPlus,
+  Camera,
+  MapPin,
+  Monitor,
+  Gamepad2
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -67,6 +75,12 @@ function App() {
     format: 'html'
   });
   const [viewCount, setViewCount] = useState(Math.floor(Math.random() * 1000) + 100);
+  const [visitorData, setVisitorData] = useState({
+    ip: '',
+    location: '',
+    device: '',
+    browser: ''
+  });
   
   // Background effects state
   const [backgroundEffects, setBackgroundEffects] = useState({
@@ -104,10 +118,31 @@ function App() {
     { id: 'intercom', name: 'Intercom', type: 'free' }
   ];
 
+  // CTA Button types
+  const ctaButtonTypes = [
+    { id: 'request-call', name: 'Request Call', icon: Phone, color: '#10B981' },
+    { id: 'join-now', name: 'Join Now', icon: UserPlus, color: '#3B82F6' },
+    { id: 'subscribe', name: 'Subscribe', icon: Bell, color: '#F59E0B' },
+    { id: 'waitlist', name: 'Join Waitlist', icon: ListPlus, color: '#8B5CF6' },
+    { id: 'email-me', name: 'Email Me', icon: Mail, color: '#EF4444' },
+    { id: 'take-photo', name: 'Take Photo', icon: Camera, color: '#06B6D4' }
+  ];
+
+  // Slot machine prizes
+  const slotPrizes = [
+    { id: 'discount-10', name: '10% Discount', probability: 30, icon: '💰' },
+    { id: 'discount-25', name: '25% Discount', probability: 15, icon: '🎯' },
+    { id: 'free-trial', name: 'Free Trial', probability: 20, icon: '🚀' },
+    { id: 'free-shipping', name: 'Free Shipping', probability: 25, icon: '📦' },
+    { id: 'jackpot', name: 'JACKPOT!', probability: 5, icon: '🎉' },
+    { id: 'try-again', name: 'Try Again', probability: 5, icon: '🎲' }
+  ];
+
   // Component types available in the builder
   const componentTypes = [
     { id: 'text', name: 'Text', icon: Type, description: 'Add headings and paragraphs' },
     { id: 'button', name: 'Button', icon: MousePointer, description: 'Call-to-action buttons' },
+    { id: 'cta-button', name: 'CTA Button', icon: Zap, description: 'Conversion buttons' },
     { id: 'form', name: 'Form', icon: FormInput, description: 'Data collection forms' },
     { id: 'timer', name: 'Timer', icon: Timer, description: 'Countdown timers' },
     { id: 'audio', name: 'Audio', icon: Music, description: 'Music and sound effects' },
@@ -115,6 +150,8 @@ function App() {
     { id: 'logo', name: 'Logo', icon: ImageIcon, description: 'Brand logos and images' },
     { id: 'chatbot', name: 'AI Chat', icon: MessageSquare, description: 'ElevenLabs AI Bot' },
     { id: 'livechat', name: 'Live Chat', icon: Bot, description: 'Free Chat Providers' },
+    { id: 'slot-machine', name: 'Slot Game', icon: Gamepad2, description: 'Gamification Widget' },
+    { id: 'visitor-data', name: 'Visitor Info', icon: Monitor, description: 'Show visitor data' },
   ];
 
   // Load Google Fonts
@@ -130,16 +167,52 @@ function App() {
     loadGoogleFonts();
   }, []);
 
-  // Load initial data
+  // Load initial data and visitor info
   useEffect(() => {
     fetchPages();
     fetchRoyaltyFreeSounds();
+    fetchVisitorData();
+    
     // Simulate view count changes
     const interval = setInterval(() => {
       setViewCount(prev => prev + Math.floor(Math.random() * 3));
     }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch visitor data (IP, location, device)
+  const fetchVisitorData = async () => {
+    try {
+      // Get IP and location
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipResponse.json();
+      
+      const locationResponse = await fetch(`https://ipapi.co/${ipData.ip}/json/`);
+      const locationData = await locationResponse.json();
+      
+      // Get device info
+      const deviceInfo = {
+        browser: navigator.userAgent.split(' ').pop(),
+        device: /Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
+        os: navigator.platform
+      };
+      
+      setVisitorData({
+        ip: ipData.ip,
+        location: `${locationData.city}, ${locationData.country_name}`,
+        device: `${deviceInfo.device} (${deviceInfo.os})`,
+        browser: deviceInfo.browser
+      });
+    } catch (error) {
+      console.error('Error fetching visitor data:', error);
+      setVisitorData({
+        ip: '192.168.1.1',
+        location: 'Anonymous Location',
+        device: 'Unknown Device',
+        browser: 'Unknown Browser'
+      });
+    }
+  };
 
   // Shimmer effect
   useEffect(() => {
@@ -223,6 +296,17 @@ function App() {
         return { text: 'Your text here', tag: 'p', fontFamily: 'Inter', allCaps: false };
       case 'button':
         return { text: 'Click Me', action: 'alert("Button clicked!")', fontFamily: 'Inter', allCaps: false };
+      case 'cta-button':
+        return { 
+          ctaType: 'request-call', 
+          text: 'Request Call', 
+          action: 'call',
+          phone: '+1-555-0123',
+          email: 'contact@example.com',
+          formFields: ['name', 'email', 'phone'],
+          fontFamily: 'Inter', 
+          allCaps: false 
+        };
       case 'form':
         return { fields: [{ name: 'email', type: 'email', placeholder: 'Enter your email' }] };
       case 'timer':
@@ -248,6 +332,23 @@ function App() {
             position: 'bottom-right'
           }
         };
+      case 'slot-machine':
+        return {
+          winEvery: 5, // Win every 5th play
+          currentPlays: 0,
+          prizes: slotPrizes,
+          title: '🎰 Spin to Win!',
+          subtitle: 'Try your luck!'
+        };
+      case 'visitor-data':
+        return {
+          showIP: true,
+          showLocation: true,
+          showDevice: true,
+          showBrowser: true,
+          title: '🔒 Your Security Info',
+          style: 'security'
+        };
       default:
         return {};
     }
@@ -266,6 +367,7 @@ function App() {
       case 'text':
         return { ...baseStyle, fontSize: 16, fontWeight: 'normal', fontFamily: 'Inter' };
       case 'button':
+      case 'cta-button':
         return { 
           ...baseStyle, 
           padding: '12px 24px', 
@@ -274,6 +376,23 @@ function App() {
           cursor: 'pointer',
           transition: 'all 0.3s ease',
           fontFamily: 'Inter'
+        };
+      case 'slot-machine':
+        return {
+          ...baseStyle,
+          width: '320px',
+          height: '400px',
+          padding: '16px',
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(96, 165, 250, 0.9) 100%)'
+        };
+      case 'visitor-data':
+        return {
+          ...baseStyle,
+          width: '300px',
+          height: '280px',
+          padding: '16px',
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.3)'
         };
       case 'chatbot':
         return {
@@ -292,6 +411,75 @@ function App() {
       default:
         return baseStyle;
     }
+  };
+
+  // Handle camera capture
+  const handleCameraCapture = async (componentId) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+      
+      video.addEventListener('loadedmetadata', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        
+        const imageData = canvas.toDataURL('image/jpeg');
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Save the captured image
+        updateComponent(componentId, {
+          content: { ...selectedComponent.content, capturedImage: imageData }
+        });
+        
+        alert('📸 Photo captured successfully!');
+      });
+      
+    } catch (error) {
+      console.error('Camera access denied:', error);
+      alert('❌ Camera access denied. Please allow camera permissions.');
+    }
+  };
+
+  // Handle slot machine spin
+  const handleSlotSpin = (componentId) => {
+    const component = currentPage.components.find(c => c.id === componentId);
+    const currentPlays = component.content.currentPlays + 1;
+    const winEvery = component.content.winEvery;
+    
+    let prize;
+    if (currentPlays % winEvery === 0) {
+      // Guaranteed win - select from winning prizes
+      const winningPrizes = slotPrizes.filter(p => p.id !== 'try-again');
+      prize = winningPrizes[Math.floor(Math.random() * winningPrizes.length)];
+    } else {
+      // Random based on probability
+      const rand = Math.random() * 100;
+      let cumulative = 0;
+      for (const p of slotPrizes) {
+        cumulative += p.probability;
+        if (rand <= cumulative) {
+          prize = p;
+          break;
+        }
+      }
+    }
+    
+    updateComponent(componentId, {
+      content: { 
+        ...component.content, 
+        currentPlays,
+        lastPrize: prize
+      }
+    });
+    
+    setTimeout(() => {
+      alert(`${prize.icon} ${prize.name}! ${prize.id === 'jackpot' ? 'CONGRATULATIONS!' : 'Claim your prize!'}`);
+    }, 2000);
   };
 
   const updateComponent = (componentId, updates) => {
@@ -522,6 +710,82 @@ function App() {
           </button>
         );
 
+      case 'cta-button':
+        const ctaType = ctaButtonTypes.find(c => c.id === content.ctaType) || ctaButtonTypes[0];
+        const ctaStyle = { ...commonStyle, background: `${ctaType.color}15`, border: `1px solid ${ctaType.color}30` };
+        return (
+          <button
+            key={component.id}
+            style={ctaStyle}
+            onClick={(e) => {
+              handleComponentClick(component, e);
+              if (content.ctaType === 'take-photo') {
+                handleCameraCapture(component.id);
+              }
+            }}
+            className={`component cta-button ${selectedComponent?.id === component.id ? 'selected' : ''}`}
+          >
+            <ctaType.icon size={16} style={{ marginRight: '8px', color: ctaType.color }} />
+            {content.text || ctaType.name}
+          </button>
+        );
+
+      case 'slot-machine':
+        return (
+          <div
+            key={component.id}
+            style={commonStyle}
+            onClick={(e) => handleComponentClick(component, e)}
+            className={`component slot-machine ${selectedComponent?.id === component.id ? 'selected' : ''}`}
+          >
+            <div className="slot-header">
+              <h3>{content.title}</h3>
+              <p>{content.subtitle}</p>
+            </div>
+            <div className="slot-reels">
+              <div className="reel">🍒</div>
+              <div className="reel">🍋</div>
+              <div className="reel">🔔</div>
+            </div>
+            <div className="slot-info">
+              <p>Plays: {content.currentPlays}</p>
+              {content.lastPrize && <p>Last: {content.lastPrize.icon} {content.lastPrize.name}</p>}
+            </div>
+            <button 
+              className="spin-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSlotSpin(component.id);
+              }}
+            >
+              🎰 SPIN
+            </button>
+          </div>
+        );
+
+      case 'visitor-data':
+        return (
+          <div
+            key={component.id}
+            style={commonStyle}
+            onClick={(e) => handleComponentClick(component, e)}
+            className={`component visitor-data ${selectedComponent?.id === component.id ? 'selected' : ''}`}
+          >
+            <div className="data-header">
+              <h3>{content.title}</h3>
+            </div>
+            <div className="data-fields">
+              {content.showIP && <div className="data-field">🌐 IP: {visitorData.ip}</div>}
+              {content.showLocation && <div className="data-field">📍 Location: {visitorData.location}</div>}
+              {content.showDevice && <div className="data-field">💻 Device: {visitorData.device}</div>}
+              {content.showBrowser && <div className="data-field">🌏 Browser: {visitorData.browser}</div>}
+            </div>
+            <div className="security-badge">
+              <span>🔒 Secure Connection</span>
+            </div>
+          </div>
+        );
+
       case 'timer':
         return (
           <div
@@ -633,6 +897,174 @@ function App() {
         </div>
 
         <div className="properties-content">
+          {selectedComponent.type === 'cta-button' && (
+            <>
+              <div className="property-group">
+                <Label>CTA Type</Label>
+                <Select
+                  value={selectedComponent.content.ctaType || 'request-call'}
+                  onValueChange={(value) => {
+                    const ctaType = ctaButtonTypes.find(c => c.id === value);
+                    updateComponent(selectedComponent.id, {
+                      content: { 
+                        ...selectedComponent.content, 
+                        ctaType: value,
+                        text: ctaType.name 
+                      }
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ctaButtonTypes.map(cta => (
+                      <SelectItem key={cta.id} value={cta.id}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <cta.icon size={16} style={{ color: cta.color }} />
+                          {cta.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="property-group">
+                <Label>Button Text</Label>
+                <Input
+                  value={selectedComponent.content.text || ''}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, text: e.target.value }
+                  })}
+                  placeholder="Button text..."
+                />
+              </div>
+
+              {(selectedComponent.content.ctaType === 'request-call') && (
+                <div className="property-group">
+                  <Label>Phone Number</Label>
+                  <Input
+                    value={selectedComponent.content.phone || ''}
+                    onChange={(e) => updateComponent(selectedComponent.id, {
+                      content: { ...selectedComponent.content, phone: e.target.value }
+                    })}
+                    placeholder="+1-555-0123"
+                  />
+                </div>
+              )}
+
+              {(selectedComponent.content.ctaType === 'email-me') && (
+                <div className="property-group">
+                  <Label>Email Address</Label>
+                  <Input
+                    value={selectedComponent.content.email || ''}
+                    onChange={(e) => updateComponent(selectedComponent.id, {
+                      content: { ...selectedComponent.content, email: e.target.value }
+                    })}
+                    placeholder="contact@example.com"
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {selectedComponent.type === 'slot-machine' && (
+            <>
+              <div className="property-group">
+                <Label>Title</Label>
+                <Input
+                  value={selectedComponent.content.title || ''}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, title: e.target.value }
+                  })}
+                  placeholder="🎰 Spin to Win!"
+                />
+              </div>
+              
+              <div className="property-group">
+                <Label>Win Every X Plays</Label>
+                <Slider
+                  value={[selectedComponent.content.winEvery || 5]}
+                  onValueChange={(value) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, winEvery: value[0] }
+                  })}
+                  min={2}
+                  max={20}
+                  step={1}
+                />
+                <span className="text-sm text-gray-400">Currently: Every {selectedComponent.content.winEvery || 5} plays</span>
+              </div>
+
+              <div className="property-group">
+                <Label>Statistics</Label>
+                <div className="slot-stats">
+                  <p>Total Plays: {selectedComponent.content.currentPlays || 0}</p>
+                  {selectedComponent.content.lastPrize && (
+                    <p>Last Prize: {selectedComponent.content.lastPrize.icon} {selectedComponent.content.lastPrize.name}</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {selectedComponent.type === 'visitor-data' && (
+            <>
+              <div className="property-group">
+                <Label>Title</Label>
+                <Input
+                  value={selectedComponent.content.title || ''}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, title: e.target.value }
+                  })}
+                  placeholder="🔒 Your Security Info"
+                />
+              </div>
+              
+              <div className="property-group">
+                <Label>Data to Show</Label>
+                <div className="data-toggles">
+                  <div className="toggle-item">
+                    <Label>Show IP Address</Label>
+                    <Switch
+                      checked={selectedComponent.content.showIP !== false}
+                      onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
+                        content: { ...selectedComponent.content, showIP: checked }
+                      })}
+                    />
+                  </div>
+                  <div className="toggle-item">
+                    <Label>Show Location</Label>
+                    <Switch
+                      checked={selectedComponent.content.showLocation !== false}
+                      onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
+                        content: { ...selectedComponent.content, showLocation: checked }
+                      })}
+                    />
+                  </div>
+                  <div className="toggle-item">
+                    <Label>Show Device</Label>
+                    <Switch
+                      checked={selectedComponent.content.showDevice !== false}
+                      onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
+                        content: { ...selectedComponent.content, showDevice: checked }
+                      })}
+                    />
+                  </div>
+                  <div className="toggle-item">
+                    <Label>Show Browser</Label>
+                    <Switch
+                      checked={selectedComponent.content.showBrowser !== false}
+                      onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
+                        content: { ...selectedComponent.content, showBrowser: checked }
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           {(selectedComponent.type === 'text' || selectedComponent.type === 'button') && (
             <>
               <div className="property-group">
