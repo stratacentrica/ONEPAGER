@@ -200,13 +200,23 @@ function App() {
     updatePage({ components: updatedComponents });
   };
 
-  const updateComponent = (componentId, updates) => {
+  const handleComponentDrag = (componentId, e) => {
     if (!currentPage) return;
+    
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
     const updatedComponents = currentPage.components.map(comp =>
-      comp.id === componentId ? { ...comp, ...updates } : comp
+      comp.id === componentId ? { ...comp, position: { x: x - 50, y: y - 25 } } : comp
     );
     updatePage({ components: updatedComponents });
+  };
+
+  const handleComponentClick = (component, e) => {
+    e.stopPropagation();
+    setSelectedComponent(component);
   };
 
   const deleteComponent = (componentId) => {
