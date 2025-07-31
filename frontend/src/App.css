@@ -410,6 +410,52 @@ body {
   padding: 0.5rem 1rem;
 }
 
+/* Audio/Music Library Styles */
+.music-library {
+  margin-top: 0.5rem;
+}
+
+.music-tracks {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+}
+
+.music-track {
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.music-track:hover {
+  background: rgba(192, 192, 192, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+.track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.track-name {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #ffffff;
+}
+
+.track-details {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.audio-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 /* ElevenLabs Chatbot Widget */
 .chatbot-widget {
   flex-direction: column;
