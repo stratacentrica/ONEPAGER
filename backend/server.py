@@ -251,7 +251,7 @@ async def export_landing_page(page_id: str):
     html_content = generate_html_export(page_data)
     
     # Save to temporary file
-    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False)
+    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8')
     temp_file.write(html_content)
     temp_file.close()
     
