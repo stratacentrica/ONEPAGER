@@ -979,14 +979,44 @@ function App() {
                     </div>
                   </DialogContent>
                 </Dialog>
-                <Button
-                  onClick={getEmbedCode}
-                  variant="outline"
-                  className="glass-button"
-                >
-                  <Code size={16} className="mr-2" />
-                  Embed
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="glass-button"
+                    >
+                      <Code size={16} className="mr-2" />
+                      Embed
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="glass-panel">
+                    <DialogHeader>
+                      <DialogTitle>🔗 Get Embed Code</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="embed-formats">
+                        <Button 
+                          onClick={() => getEmbedCode('iframe')} 
+                          className="w-full glass-button primary mb-2"
+                        >
+                          📱 Copy iFrame Code
+                        </Button>
+                        <Button 
+                          onClick={() => getEmbedCode('javascript')} 
+                          className="w-full glass-button mb-2"
+                        >
+                          ⚡ Copy JavaScript Code
+                        </Button>
+                        <Button 
+                          onClick={() => getEmbedCode('html')} 
+                          className="w-full glass-button"
+                        >
+                          🏷️ Copy HTML Snippet
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Dialog open={ftpDialogOpen} onOpenChange={setFtpDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="glass-button">
