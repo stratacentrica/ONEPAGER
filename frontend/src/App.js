@@ -285,15 +285,26 @@ function App() {
     }
   };
 
-  const getEmbedCode = async () => {
+  const uploadViaFTP = async () => {
     if (!currentPage) return;
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/pages/${currentPage.id}/embed-code`);
-      navigator.clipboard.writeText(response.data.embed_code);
-      alert('Embed code copied to clipboard!');
+      setIsLoading(true);
+      const response = await axios.post(`${API_BASE_URL}/api/pages/${currentPage.id}/ftp-upload`, {
+        page_id: currentPage.id,
+        ftp_host: ftpConfig.host,
+        ftp_username: ftpConfig.username,
+        ftp_password: ftpConfig.password,
+        remote_path: ftpConfig.remote_path
+      });
+      
+      alert(`Success! ${response.data.message}`);
+      setFtpDialogOpen(false);
     } catch (error) {
-      console.error('Error getting embed code:', error);
+      console.error('FTP upload error:', error);
+      alert(`FTP Upload failed: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
