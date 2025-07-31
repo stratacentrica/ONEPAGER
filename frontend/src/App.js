@@ -774,6 +774,82 @@ function App() {
             </>
           )}
 
+          {selectedComponent.type === 'audio' && (
+            <>
+              <div className="property-group">
+                <Label>Audio Source</Label>
+                <Tabs defaultValue="library" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="library">🎵 Free Library</TabsTrigger>
+                    <TabsTrigger value="upload">📁 Upload</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="library" className="mt-4">
+                    <div className="music-library">
+                      <Label>Chill & Atmospheric Tracks</Label>
+                      <div className="music-tracks">
+                        {royaltyFreeSounds.map((sound) => (
+                          <div key={sound.id} className="music-track glass-effect p-2 mb-2 cursor-pointer"
+                               onClick={() => updateComponent(selectedComponent.id, {
+                                 content: { ...selectedComponent.content, url: sound.url, name: sound.name }
+                               })}>
+                            <div className="track-info">
+                              <span className="track-name">{sound.name}</span>
+                              <span className="track-details">
+                                {sound.genre} • {sound.duration} • {sound.mood}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="upload" className="mt-4">
+                    <div className="audio-upload">
+                      <Button
+                        onClick={() => {/* TODO: Implement audio upload */}}
+                        variant="outline"
+                        className="w-full glass-button"
+                      >
+                        <Upload size={16} className="mr-2" />
+                        Upload Audio File
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+              <div className="property-group">
+                <Label>Current Track</Label>
+                <Input
+                  value={selectedComponent.content.name || 'No track selected'}
+                  readOnly
+                  className="glass-effect"
+                />
+              </div>
+              <div className="property-group">
+                <div className="audio-controls">
+                  <Label>Autoplay</Label>
+                  <Switch
+                    checked={selectedComponent.content.autoplay || false}
+                    onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
+                      content: { ...selectedComponent.content, autoplay: checked }
+                    })}
+                  />
+                </div>
+              </div>
+              <div className="property-group">
+                <div className="audio-controls">
+                  <Label>Loop</Label>
+                  <Switch
+                    checked={selectedComponent.content.loop || false}
+                    onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
+                      content: { ...selectedComponent.content, loop: checked }
+                    })}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
           {selectedComponent.type === 'livechat' && (
             <>
               <div className="property-group">
