@@ -28,6 +28,8 @@ body {
   border: 1px solid rgba(192, 192, 192, 0.1);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 10; /* Fixed layering */
 }
 
 .glass-effect {
@@ -37,12 +39,15 @@ body {
   border: 1px solid rgba(192, 192, 192, 0.15);
   border-radius: 12px;
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 5; /* Fixed layering */
 }
 
 .glass-effect:hover {
   background: rgba(192, 192, 192, 0.12);
   transform: translateY(-2px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 15; /* Higher on hover */
 }
 
 .glass-button {
@@ -55,21 +60,26 @@ body {
   font-weight: 500;
   transition: all 0.3s ease;
   cursor: pointer;
+  position: relative;
+  z-index: 20; /* Always on top for buttons */
 }
 
 .glass-button:hover {
   background: rgba(192, 192, 192, 0.15);
   transform: translateY(-1px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  z-index: 25; /* Higher on hover */
 }
 
 .glass-button.primary {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(96, 165, 250, 0.8) 100%); /* Blue gradient, NO PURPLE */
   border: 1px solid rgba(59, 130, 246, 0.3);
+  z-index: 30; /* Primary buttons always highest */
 }
 
 .glass-button.primary:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(96, 165, 250, 0.9) 100%);
+  z-index: 35;
 }
 
 /* Header - Fixed Layout Issues */
@@ -77,6 +87,7 @@ body {
   padding: 1rem 2rem;
   margin: 1rem 1rem 0 1rem;
   border-radius: 16px;
+  z-index: 100; /* Always on top */
 }
 
 .header-content {
@@ -90,6 +101,7 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
+  z-index: 101;
 }
 
 .brand-logo {
@@ -119,6 +131,7 @@ body {
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  z-index: 102;
 }
 
 .view-counter {
@@ -129,6 +142,7 @@ body {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
   border-radius: 8px;
+  z-index: 21;
 }
 
 /* Main Layout - Fixed Spacing */
@@ -138,15 +152,18 @@ body {
   gap: 1rem;
   padding: 1rem;
   min-height: calc(100vh - 120px);
+  position: relative;
+  z-index: 1;
 }
 
-/* Sidebar - Fixed Border Radius */
+/* Sidebar - Fixed Border Radius & Layering */
 .sidebar {
   width: 300px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   border-radius: 16px;
+  z-index: 50; /* Higher than canvas */
 }
 
 .sidebar-tabs {
@@ -169,6 +186,12 @@ body {
   cursor: pointer;
   text-align: center;
   user-select: none;
+  position: relative;
+  z-index: 51;
+}
+
+.component-item:hover {
+  z-index: 52;
 }
 
 .component-item span {
@@ -224,6 +247,8 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 2;
 }
 
 .canvas {
@@ -234,6 +259,7 @@ body {
   min-height: 600px;
   background-attachment: fixed;
   transition: filter 0.3s ease;
+  z-index: 3; /* Canvas lower than sidebars */
 }
 
 .canvas-empty-state {
@@ -241,12 +267,14 @@ body {
   align-items: center;
   justify-content: center;
   height: 100%;
+  z-index: 4;
 }
 
 .empty-message {
   padding: 3rem;
   text-align: center;
   max-width: 400px;
+  z-index: 5;
 }
 
 .empty-message h3 {
@@ -265,12 +293,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 4;
 }
 
 .welcome-message {
   padding: 4rem;
   text-align: center;
   max-width: 500px;
+  z-index: 5;
 }
 
 .welcome-message h2 {
@@ -294,7 +324,7 @@ body {
   position: absolute;
   top: 20px;
   right: 20px;
-  z-index: 1;
+  z-index: 1; /* Behind components but visible */
 }
 
 .logo-watermark {
@@ -308,7 +338,7 @@ body {
   opacity: 0.6;
 }
 
-/* Shimmer Effect - NEW! */
+/* Shimmer Effect - FIXED! */
 .shimmer-overlay {
   position: absolute;
   top: 0;
@@ -322,7 +352,7 @@ body {
     transparent 100%
   );
   pointer-events: none;
-  z-index: 2;
+  z-index: 2; /* Above background, below components */
   transition: left 2s ease-in-out;
 }
 
@@ -330,7 +360,7 @@ body {
   left: 100%;
 }
 
-/* Components on Canvas */
+/* Components on Canvas - FIXED LAYERING */
 .component {
   min-width: 100px;
   min-height: 40px;
@@ -341,16 +371,20 @@ body {
   justify-content: center;
   padding: 0.75rem;
   font-weight: 500;
+  position: relative;
+  z-index: 10; /* Above canvas and shimmer */
 }
 
 .component:hover {
   border-color: rgba(59, 130, 246, 0.5); /* Blue, NO PURPLE */
   transform: scale(1.02);
+  z-index: 15; /* Higher on hover */
 }
 
 .component.selected {
   border-color: #3b82f6; /* Blue, NO PURPLE */
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  z-index: 20; /* Highest when selected */
 }
 
 .timer-display {
@@ -383,6 +417,7 @@ body {
   padding: 1rem;
   min-width: 280px;
   min-height: 350px;
+  z-index: 11;
 }
 
 .chatbot-header {
@@ -436,13 +471,14 @@ body {
   justify-content: center;
 }
 
-/* Live Chat Widget - NEW! */
+/* Live Chat Widget - FIXED LAYERING */
 .livechat-widget {
   flex-direction: column;
   align-items: stretch;
   padding: 1rem;
   min-width: 260px;
   min-height: 320px;
+  z-index: 11;
 }
 
 .livechat-header {
@@ -502,13 +538,14 @@ body {
   font-size: 0.875rem;
 }
 
-/* Properties Sidebar - Fixed Border Radius */
+/* Properties Sidebar - FIXED LAYERING */
 .properties-sidebar {
   width: 300px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   border-radius: 16px;
+  z-index: 50; /* Same as left sidebar */
 }
 
 .properties-panel {
@@ -545,6 +582,19 @@ body {
   gap: 0.5rem;
 }
 
+/* Dialog/Modal Overlays - HIGHEST Z-INDEX */
+[data-state="open"] {
+  z-index: 1000 !important;
+}
+
+.dialog-overlay {
+  z-index: 999 !important;
+}
+
+.dialog-content {
+  z-index: 1001 !important;
+}
+
 /* Preview Mode */
 .preview-mode {
   width: 100vw;
@@ -552,14 +602,14 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1000;
+  z-index: 10000; /* Highest possible */
 }
 
 .preview-header {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  z-index: 1001;
+  z-index: 10001;
 }
 
 .preview-canvas {
@@ -571,6 +621,7 @@ body {
 /* Background Effects */
 .background-vignette {
   transition: background 0.3s ease;
+  z-index: 1;
 }
 
 /* Responsive Design */
@@ -599,16 +650,19 @@ body {
   .sidebar {
     width: 100%;
     order: 2;
+    z-index: 60;
   }
   
   .properties-sidebar {
     width: 100%;
     order: 3;
+    z-index: 60;
   }
   
   .canvas-area {
     order: 1;
     min-height: 400px;
+    z-index: 10;
   }
 }
 

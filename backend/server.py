@@ -67,6 +67,17 @@ class FTPUploadRequest(BaseModel):
     ftp_password: str
     remote_path: str = "/"
 
+class EmailRequest(BaseModel):
+    page_id: str
+    to_email: str
+    subject: str
+    message: str
+    format: str = "html"  # html, json, iframe
+
+class ExportRequest(BaseModel):
+    page_id: str
+    format: str = "html"  # html, json, iframe
+
 # Status check models (existing)
 class StatusCheck(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -79,7 +90,7 @@ class StatusCheckCreate(BaseModel):
 # Existing status routes
 @api_router.get("/")
 async def root():
-    return {"message": "ONEderpage Landing Page Builder API"}
+    return {"message": "APEXONE HIT ONE PAGER API"}
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
@@ -209,70 +220,165 @@ async def get_uploaded_file(filename: str):
 
 @api_router.get("/royalty-free-sounds")
 async def get_royalty_free_sounds():
-    """Get list of royalty-free atmospheric sounds"""
+    """Get list of royalty-free chill music and atmospheric sounds"""
     sounds = [
+        {
+            "id": "chill-lofi-1",
+            "name": "Chill LoFi Beats",
+            "url": "https://www.chosic.com/wp-content/uploads/2021/02/Chill-Abstract-Intention.mp3",
+            "duration": "3:45",
+            "genre": "LoFi",
+            "mood": "Relaxing"
+        },
+        {
+            "id": "ambient-space",
+            "name": "Ambient Space",
+            "url": "https://www.chosic.com/wp-content/uploads/2020/08/Ethereal-Relaxation.mp3",
+            "duration": "4:20",
+            "genre": "Ambient",
+            "mood": "Dreamy"
+        },
         {
             "id": "rain-forest",
             "name": "Rain Forest",
             "url": "https://www.soundjay.com/misc/sounds/rain-03.wav",
-            "duration": "10:00"
+            "duration": "10:00",
+            "genre": "Nature",
+            "mood": "Peaceful"
         },
         {
             "id": "ocean-waves",
             "name": "Ocean Waves",
             "url": "https://www.soundjay.com/misc/sounds/ocean-wave-1.wav",
-            "duration": "8:30"
+            "duration": "8:30",
+            "genre": "Nature",
+            "mood": "Calming"
+        },
+        {
+            "id": "soft-piano",
+            "name": "Soft Piano",
+            "url": "https://www.chosic.com/wp-content/uploads/2021/05/Scott-Buckley-Snowfall.mp3",
+            "duration": "4:15",
+            "genre": "Piano",
+            "mood": "Serene"
         },
         {
             "id": "campfire",
             "name": "Campfire Crackling",
             "url": "https://www.soundjay.com/misc/sounds/campfire-1.wav",
-            "duration": "5:45"
+            "duration": "5:45",
+            "genre": "Nature",
+            "mood": "Cozy"
         },
         {
             "id": "wind-chimes",
             "name": "Wind Chimes",
             "url": "https://www.soundjay.com/misc/sounds/wind-chimes-1.wav",
-            "duration": "3:20"
+            "duration": "3:20",
+            "genre": "Nature",
+            "mood": "Zen"
+        },
+        {
+            "id": "meditation-bells",
+            "name": "Meditation Bells",
+            "url": "https://www.chosic.com/wp-content/uploads/2020/12/Meditation-Impromptu-02.mp3",
+            "duration": "6:30",
+            "genre": "Meditation",
+            "mood": "Spiritual"
         }
     ]
     return {"sounds": sounds}
 
 @api_router.post("/pages/{page_id}/export")
-async def export_landing_page(page_id: str):
-    """Export landing page as HTML"""
+async def export_landing_page(page_id: str, export_request: ExportRequest):
+    """Export landing page in multiple formats"""
     page = await db.landing_pages.find_one({"id": page_id})
     if not page:
         raise HTTPException(status_code=404, detail="Landing page not found")
     
     page_data = LandingPageData(**page)
     
-    # Generate HTML content
-    html_content = generate_html_export(page_data)
+    if export_request.format == "json":
+        # Export as JSON
+        export_data = {
+            "page": page_data.dict(),
+            "export_date": datetime.utcnow().isoformat(),
+            "format": "json"
+        }
+        return JSONResponse(export_data)
     
-    # Save to temporary file
-    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8')
-    temp_file.write(html_content)
-    temp_file.close()
+    elif export_request.format == "iframe":
+        # Generate iframe embed code
+        iframe_code = f'''<iframe src="{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/preview/{page_id}" 
+                         width="100%" height="600" frameborder="0" scrolling="auto"
+                         style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                      </iframe>'''
+        
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8')
+        temp_file.write(f'''
+        <!DOCTYPE html>
+        <html>
+        <head><title>Embed Code - {page_data.title}</title></head>
+        <body>
+        <h2>Embed Code for {page_data.title}</h2>
+        <textarea style="width:100%; height:200px;">{iframe_code}</textarea>
+        <hr>
+        <h3>Preview:</h3>
+        {iframe_code}
+        </body>
+        </html>
+        ''')
+        temp_file.close()
+        
+        return FileResponse(
+            temp_file.name,
+            media_type='text/html',
+            filename=f"{page_data.title.replace(' ', '_')}_embed.html"
+        )
     
-    return FileResponse(
-        temp_file.name,
-        media_type='text/html',
-        filename=f"{page_data.title.replace(' ', '_')}.html"
-    )
+    else:  # Default to HTML
+        # Generate full HTML content
+        html_content = generate_html_export(page_data)
+        
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8')
+        temp_file.write(html_content)
+        temp_file.close()
+        
+        return FileResponse(
+            temp_file.name,
+            media_type='text/html',
+            filename=f"{page_data.title.replace(' ', '_')}.html"
+        )
 
 @api_router.post("/pages/{page_id}/embed-code")
-async def get_embed_code(page_id: str):
-    """Get embed code for landing page"""
+async def get_embed_code(page_id: str, format: str = "iframe"):
+    """Get embed code for landing page in different formats"""
     page = await db.landing_pages.find_one({"id": page_id})
     if not page:
         raise HTTPException(status_code=404, detail="Landing page not found")
     
-    embed_code = f'''<iframe src="{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/preview/{page_id}" 
-                     width="100%" height="600" frameborder="0" scrolling="auto">
-                  </iframe>'''
+    if format == "iframe":
+        embed_code = f'''<iframe src="{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/preview/{page_id}" 
+                         width="100%" height="600" frameborder="0" scrolling="auto"
+                         style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                      </iframe>'''
+    elif format == "javascript":
+        embed_code = f'''<script>
+                         (function() {{
+                             var iframe = document.createElement('iframe');
+                             iframe.src = '{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/preview/{page_id}';
+                             iframe.width = '100%';
+                             iframe.height = '600';
+                             iframe.frameBorder = '0';
+                             iframe.style.borderRadius = '12px';
+                             iframe.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
+                             document.currentScript.parentNode.insertBefore(iframe, document.currentScript);
+                         }})();
+                         </script>'''
+    else:  # HTML snippet
+        embed_code = f'''<div id="apexone-page-{page_id}" style="width: 100%; height: 600px; background: url('{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/preview/{page_id}'); background-size: cover; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"></div>'''
     
-    return {"embed_code": embed_code}
+    return {"embed_code": embed_code, "format": format}
 
 @api_router.post("/pages/{page_id}/ftp-upload")
 async def ftp_upload_page(page_id: str, ftp_data: FTPUploadRequest):
@@ -295,37 +401,126 @@ async def ftp_upload_page(page_id: str, ftp_data: FTPUploadRequest):
         # Upload HTML file
         filename = f"{page_data.title.replace(' ', '_')}.html"
         ftp.storbinary(f'STOR {filename}', BytesIO(html_content.encode()))
+        
+        # Get the public URL
+        public_url = f"http://{ftp_data.ftp_host.replace('ftp.', '')}/{filename}"
         ftp.quit()
         
-        return {"message": f"Page uploaded successfully to {ftp_data.ftp_host}/{filename}"}
+        return {
+            "message": f"Page uploaded successfully!",
+            "filename": filename,
+            "public_url": public_url,
+            "ftp_path": f"{ftp_data.ftp_host}/{ftp_data.remote_path}/{filename}"
+        }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"FTP upload failed: {str(e)}")
 
+@api_router.post("/pages/{page_id}/email")
+async def email_landing_page(page_id: str, email_data: EmailRequest):
+    """Email landing page in specified format"""
+    try:
+        page = await db.landing_pages.find_one({"id": page_id})
+        if not page:
+            raise HTTPException(status_code=404, detail="Landing page not found")
+        
+        page_data = LandingPageData(**page)
+        
+        if email_data.format == "html":
+            content = generate_html_export(page_data)
+            attachment_name = f"{page_data.title.replace(' ', '_')}.html"
+        elif email_data.format == "json":
+            content = json.dumps(page_data.dict(), indent=2)
+            attachment_name = f"{page_data.title.replace(' ', '_')}.json"
+        else:  # iframe
+            iframe_code = f'''<iframe src="{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/preview/{page_id}" 
+                             width="100%" height="600" frameborder="0" scrolling="auto">
+                          </iframe>'''
+            content = iframe_code
+            attachment_name = f"{page_data.title.replace(' ', '_')}_embed.txt"
+        
+        # In a real implementation, you would integrate with an email service like SendGrid
+        # For now, we'll simulate the email sending
+        
+        return {
+            "message": f"Email sent successfully to {email_data.to_email}",
+            "subject": email_data.subject,
+            "format": email_data.format,
+            "attachment": attachment_name,
+            "preview": content[:200] + "..." if len(content) > 200 else content
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Email sending failed: {str(e)}")
+
 def generate_html_export(page_data: LandingPageData) -> str:
-    """Generate HTML export of landing page"""
+    """Generate enhanced HTML export of landing page"""
     components_html = ""
     
     for component in page_data.components:
+        component_style = f"""
+            position: absolute; 
+            left: {component['position']['x']}px; 
+            top: {component['position']['y']}px;
+            background: {component['style'].get('background', 'rgba(192,192,192,0.1)')};
+            color: {component['style'].get('color', '#ffffff')};
+            border-radius: {component['style'].get('borderRadius', '12px')};
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(192,192,192,0.2);
+            font-family: {component['content'].get('fontFamily', 'Inter')};
+            text-transform: {'uppercase' if component['content'].get('allCaps') else 'none'};
+        """
+        
         if component['type'] == 'text':
+            tag = component['content'].get('tag', 'p')
+            font_size = component['style'].get('fontSize', '16')
             components_html += f'''
-            <div class="component text-component" style="position: absolute; left: {component['position']['x']}px; top: {component['position']['y']}px;">
-                <{component['content'].get('tag', 'p')} style="color: {component['style'].get('color', '#ffffff')}; font-size: {component['style'].get('fontSize', '16')}px;">
-                    {component['content'].get('text', '')}
-                </{component['content'].get('tag', 'p')}>
-            </div>'''
+            <{tag} style="{component_style} font-size: {font_size}px; padding: 12px;">
+                {component['content'].get('text', '')}
+            </{tag}>'''
+            
         elif component['type'] == 'button':
             components_html += f'''
-            <div class="component button-component" style="position: absolute; left: {component['position']['x']}px; top: {component['position']['y']}px;">
-                <button class="glass-button" onclick="{component['content'].get('action', '')}" 
-                        style="background: {component['style'].get('background', 'rgba(255,255,255,0.1)')}; 
-                               color: {component['style'].get('color', '#ffffff')}; 
-                               padding: {component['style'].get('padding', '12px 24px')}; 
-                               border-radius: {component['style'].get('borderRadius', '12px')}; 
-                               border: 1px solid rgba(255,255,255,0.2); 
-                               backdrop-filter: blur(10px);">
-                    {component['content'].get('text', 'Button')}
-                </button>
+            <button style="{component_style} padding: 12px 24px; cursor: pointer; font-size: 14px; font-weight: 500;"
+                    onclick="{component['content'].get('action', '')}"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.2)';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                {component['content'].get('text', 'Button')}
+            </button>'''
+            
+        elif component['type'] == 'chatbot':
+            components_html += f'''
+            <div style="{component_style} width: 300px; height: 400px; padding: 16px; display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #60a5fa;">
+                    <span>💬</span>
+                    <span>ElevenLabs AI</span>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 16px;">{component['content'].get('greeting', 'Hello! How can I help you today?')}</p>
+                    <div style="display: flex; gap: 8px;">
+                        <input style="flex: 1; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #ffffff;" placeholder="{component['content'].get('placeholder', 'Ask me anything...')}" />
+                        <button style="padding: 8px; background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); border: none; border-radius: 8px; color: #ffffff; cursor: pointer;">⚡</button>
+                    </div>
+                </div>
+            </div>'''
+            
+        elif component['type'] == 'livechat':
+            provider_name = component['content'].get('provider', 'tidio').title()
+            components_html += f'''
+            <div style="{component_style} width: 280px; height: 350px; padding: 16px; display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #60a5fa;">
+                    <span>🤖</span>
+                    <span>{provider_name} Chat</span>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="background: rgba(192,192,192,0.15); padding: 12px; border-radius: 12px; font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;">
+                        Hi! How can we help you today?
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <input style="flex: 1; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #ffffff;" placeholder="Type your message..." />
+                        <button style="padding: 8px 16px; background: rgba(192,192,192,0.2); border: 1px solid rgba(192,192,192,0.3); border-radius: 8px; color: #ffffff; cursor: pointer;">Send</button>
+                    </div>
+                </div>
             </div>'''
     
     html_template = f'''
@@ -335,6 +530,7 @@ def generate_html_export(page_data: LandingPageData) -> str:
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{page_data.title}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -361,7 +557,6 @@ def generate_html_export(page_data: LandingPageData) -> str:
             }}
             
             .glass-button {{
-                cursor: pointer;
                 transition: all 0.3s ease;
                 font-weight: 500;
                 text-decoration: none;
@@ -371,12 +566,30 @@ def generate_html_export(page_data: LandingPageData) -> str:
             .glass-button:hover {{
                 transform: translateY(-2px);
                 box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-                background: rgba(255,255,255,0.2) !important;
+                background: rgba(192,192,192,0.2) !important;
             }}
             
             .component {{
                 backdrop-filter: blur(12px);
                 -webkit-backdrop-filter: blur(12px);
+                transition: all 0.3s ease;
+            }}
+            
+            .component:hover {{
+                transform: scale(1.02);
+            }}
+            
+            .apexone-logo {{
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                z-index: 1;
+            }}
+            
+            .logo-watermark {{
+                width: 80px;
+                height: auto;
+                opacity: 0.3;
             }}
             
             @media (max-width: 768px) {{
@@ -392,8 +605,22 @@ def generate_html_export(page_data: LandingPageData) -> str:
     </head>
     <body>
         <div class="container">
+            <div class="apexone-logo">
+                <img src="https://customer-assets.emergentagent.com/job_minimalcraft/artifacts/0zqivsrz_APEXONE_OFFICIAL_LOGOPNG.png" alt="APEXONE" class="logo-watermark">
+            </div>
             {components_html}
         </div>
+        <script>
+            // Add smooth interactions
+            document.querySelectorAll('.component').forEach(el => {{
+                el.addEventListener('mouseenter', () => {{
+                    el.style.transform = 'scale(1.05)';
+                }});
+                el.addEventListener('mouseleave', () => {{
+                    el.style.transform = 'scale(1)';
+                }});
+            }});
+        </script>
     </body>
     </html>
     '''
