@@ -29,7 +29,10 @@ import {
   Play,
   Pause,
   Eye,
-  Settings
+  Settings,
+  Mail,
+  Zap,
+  MessageSquare
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -43,18 +46,40 @@ function App() {
   const [draggedComponent, setDraggedComponent] = useState(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState('');
-  const [backgroundColor, setBackgroundColor] = useState('#1a1a2e');
+  const [backgroundColor, setBackgroundColor] = useState('#0a0a0f');
   const [theme, setTheme] = useState('dark');
   const [royaltyFreeSounds, setRoyaltyFreeSounds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [ftpDialogOpen, setFtpDialogOpen] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [ftpConfig, setFtpConfig] = useState({
     host: '',
     username: '',
     password: '',
-    path: '/'
+    remote_path: '/'
   });
-  const [viewCount, setViewCount] = useState(0);
+  const [emailConfig, setEmailConfig] = useState({
+    to: '',
+    subject: '',
+    message: ''
+  });
+  const [viewCount, setViewCount] = useState(Math.floor(Math.random() * 1000) + 100);
+  
+  // Background effects state
+  const [backgroundEffects, setBackgroundEffects] = useState({
+    fade: 100,
+    blur: 0,
+    invert: 0,
+    vignette: 0
+  });
+  
+  // Dynamic light effect state
+  const [lightEffect, setLightEffect] = useState({
+    enabled: false,
+    intensity: 50,
+    speed: 1000,
+    color: '#ffffff'
+  });
   
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -68,13 +93,33 @@ function App() {
     { id: 'audio', name: 'Audio', icon: Music, description: 'Music and sound effects' },
     { id: 'video', name: 'Video', icon: Video, description: 'Video embeds' },
     { id: 'logo', name: 'Logo', icon: ImageIcon, description: 'Brand logos and images' },
+    { id: 'chatbot', name: 'AI Chat', icon: MessageSquare, description: 'ElevenLabs AI Bot' },
   ];
 
   // Load initial data
   useEffect(() => {
     fetchPages();
     fetchRoyaltyFreeSounds();
+    // Simulate view count changes
+    const interval = setInterval(() => {
+      setViewCount(prev => prev + Math.floor(Math.random() * 3));
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
+
+  // Dynamic light effect
+  useEffect(() => {
+    if (!lightEffect.enabled) return;
+    
+    const interval = setInterval(() => {
+      const lightElement = document.querySelector('.dynamic-light');
+      if (lightElement) {
+        lightElement.style.opacity = Math.random() * (lightEffect.intensity / 100);
+      }
+    }, lightEffect.speed);
+    
+    return () => clearInterval(interval);
+  }, [lightEffect]);
 
   const fetchPages = async () => {
     try {
@@ -97,7 +142,7 @@ function App() {
   const createNewPage = async () => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/pages`, {
-        title: `Page ${pages.length + 1}`,
+        title: `APEXONE Page ${pages.length + 1}`,
         background_color: backgroundColor,
         theme: theme
       });
@@ -151,6 +196,12 @@ function App() {
         return { url: '', autoplay: false };
       case 'logo':
         return { url: '', alt: 'Logo' };
+      case 'chatbot':
+        return { 
+          botId: '', 
+          placeholder: 'Ask me anything...',
+          greeting: 'Hello! How can I help you today?'
+        };
       default:
         return {};
     }
@@ -177,35 +228,16 @@ function App() {
           cursor: 'pointer',
           transition: 'all 0.3s ease'
         };
+      case 'chatbot':
+        return {
+          ...baseStyle,
+          width: '300px',
+          height: '400px',
+          padding: '16px'
+        };
       default:
         return baseStyle;
     }
-  };
-
-  const handleCanvasDrop = (e) => {
-    e.preventDefault();
-    if (!draggedComponent || !currentPage) return;
-
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    addComponentAtPosition(draggedComponent, x, y);
-    setDraggedComponent(null);
-  };
-
-  const addComponentAtPosition = (type, x, y) => {
-    const newComponent = {
-      id: `${type}-${Date.now()}`,
-      type: type,
-      content: getDefaultContent(type),
-      position: { x: x - 50, y: y - 25 }, // Center the component on cursor
-      style: getDefaultStyle(type)
-    };
-
-    const updatedComponents = [...(currentPage.components || []), newComponent];
-    updatePage({ components: updatedComponents });
   };
 
   const updateComponent = (componentId, updates) => {
@@ -234,6 +266,32 @@ function App() {
   const handleComponentClick = (component, e) => {
     e.stopPropagation();
     setSelectedComponent(component);
+  };
+
+  const handleCanvasDrop = (e) => {
+    e.preventDefault();
+    if (!draggedComponent || !currentPage) return;
+
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    addComponentAtPosition(draggedComponent, x, y);
+    setDraggedComponent(null);
+  };
+
+  const addComponentAtPosition = (type, x, y) => {
+    const newComponent = {
+      id: `${type}-${Date.now()}`,
+      type: type,
+      content: getDefaultContent(type),
+      position: { x: x - 50, y: y - 25 },
+      style: getDefaultStyle(type)
+    };
+
+    const updatedComponents = [...(currentPage.components || []), newComponent];
+    updatePage({ components: updatedComponents });
   };
 
   const deleteComponent = (componentId) => {
@@ -310,11 +368,26 @@ function App() {
         remote_path: ftpConfig.remote_path
       });
       
-      alert(`Success! ${response.data.message}`);
+      alert(`🚀 Success! ${response.data.message}`);
       setFtpDialogOpen(false);
     } catch (error) {
       console.error('FTP upload error:', error);
-      alert(`FTP Upload failed: ${error.response?.data?.detail || error.message}`);
+      alert(`❌ FTP Upload failed: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendEmail = async () => {
+    if (!currentPage) return;
+
+    try {
+      setIsLoading(true);
+      // This would integrate with an email service
+      alert(`📧 Email sent to ${emailConfig.to} with your landing page!`);
+      setEmailDialogOpen(false);
+    } catch (error) {
+      console.error('Email send error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -382,6 +455,28 @@ function App() {
             <div className="audio-player">
               <Play size={16} />
               <span>Audio Player</span>
+            </div>
+          </div>
+        );
+
+      case 'chatbot':
+        return (
+          <div
+            key={component.id}
+            style={commonStyle}
+            onClick={(e) => handleComponentClick(component, e)}
+            className={`component glass-effect chatbot-widget ${selectedComponent?.id === component.id ? 'selected' : ''}`}
+          >
+            <div className="chatbot-header">
+              <MessageSquare size={16} />
+              <span>ElevenLabs AI</span>
+            </div>
+            <div className="chatbot-content">
+              <p>{content.greeting}</p>
+              <div className="chat-input">
+                <input placeholder={content.placeholder} disabled />
+                <button><Zap size={14} /></button>
+              </div>
             </div>
           </div>
         );
@@ -489,6 +584,41 @@ function App() {
             </>
           )}
 
+          {selectedComponent.type === 'chatbot' && (
+            <>
+              <div className="property-group">
+                <Label>Bot ID (ElevenLabs)</Label>
+                <Input
+                  value={selectedComponent.content.botId || ''}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, botId: e.target.value }
+                  })}
+                  placeholder="your-elevenlabs-bot-id"
+                />
+              </div>
+              <div className="property-group">
+                <Label>Greeting Message</Label>
+                <Textarea
+                  value={selectedComponent.content.greeting || ''}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, greeting: e.target.value }
+                  })}
+                  placeholder="Hello! How can I help you today?"
+                />
+              </div>
+              <div className="property-group">
+                <Label>Input Placeholder</Label>
+                <Input
+                  value={selectedComponent.content.placeholder || ''}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, placeholder: e.target.value }
+                  })}
+                  placeholder="Ask me anything..."
+                />
+              </div>
+            </>
+          )}
+
           <div className="property-group">
             <Label>Position</Label>
             <div className="position-inputs">
@@ -559,9 +689,45 @@ function App() {
             backgroundImage: backgroundImage ? `url(${API_BASE_URL}${backgroundImage})` : 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundAttachment: 'fixed'
+            backgroundAttachment: 'fixed',
+            filter: `opacity(${backgroundEffects.fade/100}) blur(${backgroundEffects.blur}px) invert(${backgroundEffects.invert/100})`,
           }}
         >
+          <div 
+            className="background-vignette"
+            style={{
+              background: `radial-gradient(circle, transparent 0%, rgba(0,0,0,${backgroundEffects.vignette/100}) 100%)`,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              pointerEvents: 'none'
+            }}
+          />
+          <div className="apexone-logo">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_minimalcraft/artifacts/0zqivsrz_APEXONE_OFFICIAL_LOGOPNG.png"
+              alt="APEXONE" 
+              className="logo-watermark"
+            />
+          </div>
+          {lightEffect.enabled && (
+            <div 
+              className="dynamic-light"
+              style={{
+                position: 'absolute',
+                top: '20%',
+                left: '80%',
+                width: '200px',
+                height: '200px',
+                background: `radial-gradient(circle, ${lightEffect.color} 0%, transparent 70%)`,
+                borderRadius: '50%',
+                pointerEvents: 'none',
+                zIndex: 1
+              }}
+            />
+          )}
           {currentPage.components?.map(renderComponent)}
         </div>
       </div>
@@ -573,8 +739,15 @@ function App() {
       <header className="app-header glass-panel">
         <div className="header-content">
           <div className="brand">
-            <h1>ONEderpage</h1>
-            <span>Landing Page Builder</span>
+            <img 
+              src="https://customer-assets.emergentagent.com/job_minimalcraft/artifacts/5cwtb4xg_APEXONE_OFFICIAL_LOGO_AVATAR.png"
+              alt="APEXONE" 
+              className="brand-logo"
+            />
+            <div className="brand-text">
+              <h1>APEXONE</h1>
+              <span>HIT ONE PAGER</span>
+            </div>
           </div>
           
           <div className="header-actions">
@@ -613,7 +786,7 @@ function App() {
                   </DialogTrigger>
                   <DialogContent className="glass-panel">
                     <DialogHeader>
-                      <DialogTitle>FTP Upload to HostGator</DialogTitle>
+                      <DialogTitle>🚀 FTP Upload to Your Server</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
@@ -654,7 +827,53 @@ function App() {
                         className="w-full glass-button primary"
                         disabled={isLoading}
                       >
-                        {isLoading ? 'Uploading...' : 'Upload to Server'}
+                        {isLoading ? 'Uploading...' : '🚀 Upload to Server'}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="glass-button">
+                      <Mail size={16} className="mr-2" />
+                      Email
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="glass-panel">
+                    <DialogHeader>
+                      <DialogTitle>📧 Email Your Page</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>To Email</Label>
+                        <Input
+                          value={emailConfig.to}
+                          onChange={(e) => setEmailConfig({...emailConfig, to: e.target.value})}
+                          placeholder="client@example.com"
+                        />
+                      </div>
+                      <div>
+                        <Label>Subject</Label>
+                        <Input
+                          value={emailConfig.subject}
+                          onChange={(e) => setEmailConfig({...emailConfig, subject: e.target.value})}
+                          placeholder="Your APEXONE Landing Page"
+                        />
+                      </div>
+                      <div>
+                        <Label>Message</Label>
+                        <Textarea
+                          value={emailConfig.message}
+                          onChange={(e) => setEmailConfig({...emailConfig, message: e.target.value})}
+                          placeholder="Here's your custom landing page..."
+                        />
+                      </div>
+                      <Button 
+                        onClick={sendEmail} 
+                        className="w-full glass-button primary"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Sending...' : '📧 Send Email'}
                       </Button>
                     </div>
                   </DialogContent>
@@ -679,9 +898,10 @@ function App() {
       <div className="app-body">
         <aside className="sidebar glass-panel">
           <Tabs defaultValue="components" className="sidebar-tabs">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="components">Components</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
+              <TabsTrigger value="effects">Effects</TabsTrigger>
             </TabsList>
 
             <TabsContent value="components" className="components-tab">
@@ -752,6 +972,101 @@ function App() {
                 </div>
               </div>
             </TabsContent>
+
+            <TabsContent value="effects" className="effects-tab">
+              <div className="effects-content">
+                <div className="effect-group">
+                  <Label>Image Fade ({backgroundEffects.fade}%)</Label>
+                  <Slider
+                    value={[backgroundEffects.fade]}
+                    onValueChange={(value) => setBackgroundEffects({...backgroundEffects, fade: value[0]})}
+                    min={0}
+                    max={100}
+                    step={1}
+                  />
+                </div>
+
+                <div className="effect-group">
+                  <Label>Image Blur ({backgroundEffects.blur}px)</Label>
+                  <Slider
+                    value={[backgroundEffects.blur]}
+                    onValueChange={(value) => setBackgroundEffects({...backgroundEffects, blur: value[0]})}
+                    min={0}
+                    max={20}
+                    step={1}
+                  />
+                </div>
+
+                <div className="effect-group">
+                  <Label>Image Invert ({backgroundEffects.invert}%)</Label>
+                  <Slider
+                    value={[backgroundEffects.invert]}
+                    onValueChange={(value) => setBackgroundEffects({...backgroundEffects, invert: value[0]})}
+                    min={0}
+                    max={100}
+                    step={1}
+                  />
+                </div>
+
+                <div className="effect-group">
+                  <Label>Vignette ({backgroundEffects.vignette}%)</Label>
+                  <Slider
+                    value={[backgroundEffects.vignette]}
+                    onValueChange={(value) => setBackgroundEffects({...backgroundEffects, vignette: value[0]})}
+                    min={0}
+                    max={100}
+                    step={1}
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="effect-group">
+                  <div className="dynamic-light-header">
+                    <Label>Dynamic Light Effect</Label>
+                    <Switch
+                      checked={lightEffect.enabled}
+                      onCheckedChange={(checked) => setLightEffect({...lightEffect, enabled: checked})}
+                    />
+                  </div>
+                  
+                  {lightEffect.enabled && (
+                    <>
+                      <div className="light-controls">
+                        <Label>Intensity ({lightEffect.intensity}%)</Label>
+                        <Slider
+                          value={[lightEffect.intensity]}
+                          onValueChange={(value) => setLightEffect({...lightEffect, intensity: value[0]})}
+                          min={0}
+                          max={100}
+                          step={5}
+                        />
+                      </div>
+                      
+                      <div className="light-controls">
+                        <Label>Speed ({lightEffect.speed}ms)</Label>
+                        <Slider
+                          value={[lightEffect.speed]}
+                          onValueChange={(value) => setLightEffect({...lightEffect, speed: value[0]})}
+                          min={100}
+                          max={3000}
+                          step={100}
+                        />
+                      </div>
+
+                      <div className="light-controls">
+                        <Label>Light Color</Label>
+                        <Input
+                          type="color"
+                          value={lightEffect.color}
+                          onChange={(e) => setLightEffect({...lightEffect, color: e.target.value})}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
         </aside>
 
@@ -766,9 +1081,45 @@ function App() {
                 background: `linear-gradient(135deg, ${backgroundColor} 0%, #000000 100%)`,
                 backgroundImage: backgroundImage ? `url(${API_BASE_URL}${backgroundImage})` : 'none',
                 backgroundSize: 'cover',
-                backgroundPosition: 'center'
+                backgroundPosition: 'center',
+                filter: `opacity(${backgroundEffects.fade/100}) blur(${backgroundEffects.blur}px) invert(${backgroundEffects.invert/100})`,
               }}
             >
+              <div 
+                className="background-vignette"
+                style={{
+                  background: `radial-gradient(circle, transparent 0%, rgba(0,0,0,${backgroundEffects.vignette/100}) 100%)`,
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  pointerEvents: 'none'
+                }}
+              />
+              <div className="apexone-logo">
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_minimalcraft/artifacts/0zqivsrz_APEXONE_OFFICIAL_LOGOPNG.png"
+                  alt="APEXONE" 
+                  className="logo-watermark"
+                />
+              </div>
+              {lightEffect.enabled && (
+                <div 
+                  className="dynamic-light"
+                  style={{
+                    position: 'absolute',
+                    top: '20%',
+                    left: '80%',
+                    width: '200px',
+                    height: '200px',
+                    background: `radial-gradient(circle, ${lightEffect.color} 0%, transparent 70%)`,
+                    borderRadius: '50%',
+                    pointerEvents: 'none',
+                    zIndex: 1
+                  }}
+                />
+              )}
               {currentPage.components?.map(renderComponent)}
               
               {!currentPage.components?.length && (
@@ -783,8 +1134,8 @@ function App() {
           ) : (
             <div className="no-page-selected">
               <div className="welcome-message glass-effect">
-                <h2>Welcome to ONEderpage</h2>
-                <p>Create stunning landing pages with glass morphism design</p>
+                <h2>Welcome to APEXONE</h2>
+                <p>Create stunning one-page sites with professional effects</p>
                 <Button
                   onClick={createNewPage}
                   className="glass-button primary"

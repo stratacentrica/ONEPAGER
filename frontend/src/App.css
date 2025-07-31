@@ -72,32 +72,47 @@ body {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(147, 51, 234, 0.9) 100%);
 }
 
-/* Header */
+/* Header - Fixed Layout Issues */
 .app-header {
   padding: 1rem 2rem;
-  margin: 1rem;
-  margin-bottom: 0;
+  margin: 1rem 1rem 0 1rem;  /* Fixed: proper margin spacing */
+  border-radius: 16px;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 2rem;  /* Added gap for better spacing */
 }
 
-.brand h1 {
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.brand-text h1 {
   font-size: 1.5rem;
   font-weight: 700;
   background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1.2;
 }
 
-.brand span {
+.brand-text span {
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.7);
-  margin-left: 0.5rem;
+  font-weight: 400;
 }
 
 .header-actions {
@@ -116,22 +131,22 @@ body {
   border-radius: 8px;
 }
 
-/* Main Layout */
+/* Main Layout - Fixed Spacing */
 .app-body {
   display: flex;
   flex: 1;
   gap: 1rem;
   padding: 1rem;
-  padding-top: 0;
   min-height: calc(100vh - 120px);
 }
 
-/* Sidebar */
+/* Sidebar - Fixed Border Radius */
 .sidebar {
-  width: 280px;
+  width: 300px;  /* Increased width for Effects tab */
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
+  border-radius: 16px;  /* Fixed: proper border radius */
 }
 
 .sidebar-tabs {
@@ -161,15 +176,15 @@ body {
   font-weight: 500;
 }
 
-/* Settings Tab */
-.settings-content {
+/* Settings & Effects Tabs */
+.settings-content, .effects-content {
   margin-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.setting-group {
+.setting-group, .effect-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -180,6 +195,21 @@ body {
   align-items: center;
   gap: 0.75rem;
   font-size: 0.875rem;
+}
+
+/* Effects Controls */
+.dynamic-light-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.light-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 /* Canvas Area */
@@ -196,6 +226,7 @@ body {
   overflow: hidden;
   min-height: 600px;
   background-attachment: fixed;
+  transition: filter 0.3s ease;  /* Smooth effect transitions */
 }
 
 .canvas-empty-state {
@@ -251,6 +282,25 @@ body {
   font-size: 1.125rem;
 }
 
+/* APEXONE Logo Watermark */
+.apexone-logo {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1;
+}
+
+.logo-watermark {
+  width: 80px;
+  height: auto;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+}
+
+.logo-watermark:hover {
+  opacity: 0.6;
+}
+
 /* Components on Canvas */
 .component {
   min-width: 100px;
@@ -297,12 +347,73 @@ body {
   padding: 0.5rem 1rem;
 }
 
-/* Properties Sidebar */
+/* ElevenLabs Chatbot Widget */
+.chatbot-widget {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 1rem;
+  min-width: 280px;
+  min-height: 350px;
+}
+
+.chatbot-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+  color: #60a5fa;
+}
+
+.chatbot-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.chatbot-content p {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 1rem;
+}
+
+.chat-input {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.875rem;
+}
+
+.chat-input button {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Properties Sidebar - Fixed Border Radius */
 .properties-sidebar {
   width: 300px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
+  border-radius: 16px;  /* Fixed: proper border radius */
 }
 
 .properties-panel {
@@ -362,10 +473,35 @@ body {
   position: relative;
 }
 
+/* Background Effects */
+.background-vignette {
+  transition: background 0.3s ease;
+}
+
+.dynamic-light {
+  animation: lightFlicker 2s ease-in-out infinite alternate;
+}
+
+@keyframes lightFlicker {
+  0% { opacity: 0.1; }
+  100% { opacity: 0.8; }
+}
+
 /* Responsive Design */
+@media (max-width: 1400px) {
+  .sidebar, .properties-sidebar {
+    width: 280px;
+  }
+}
+
 @media (max-width: 1200px) {
-  .properties-sidebar {
+  .sidebar, .properties-sidebar {
     width: 250px;
+  }
+  
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 }
 
