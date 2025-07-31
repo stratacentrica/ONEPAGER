@@ -938,14 +938,47 @@ function App() {
                   <Eye size={16} className="mr-2" />
                   Preview
                 </Button>
-                <Button
-                  onClick={exportPage}
-                  variant="outline"
-                  className="glass-button"
-                >
-                  <Download size={16} className="mr-2" />
-                  Export
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="glass-button"
+                    >
+                      <Download size={16} className="mr-2" />
+                      Export
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="glass-panel">
+                    <DialogHeader>
+                      <DialogTitle>📥 Export Your Page</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="export-formats">
+                        <Button 
+                          onClick={() => exportPage('html')} 
+                          className="w-full glass-button primary mb-2"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? 'Exporting...' : '📄 Export as HTML'}
+                        </Button>
+                        <Button 
+                          onClick={() => exportPage('json')} 
+                          className="w-full glass-button mb-2"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? 'Exporting...' : '📊 Export as JSON'}
+                        </Button>
+                        <Button 
+                          onClick={() => exportPage('iframe')} 
+                          className="w-full glass-button"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? 'Exporting...' : '🖼️ Export Embed Code'}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button
                   onClick={getEmbedCode}
                   variant="outline"
