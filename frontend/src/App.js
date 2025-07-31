@@ -285,6 +285,18 @@ function App() {
     }
   };
 
+  const getEmbedCode = async () => {
+    if (!currentPage) return;
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/pages/${currentPage.id}/embed-code`);
+      navigator.clipboard.writeText(response.data.embed_code);
+      alert('Embed code copied to clipboard!');
+    } catch (error) {
+      console.error('Error getting embed code:', error);
+    }
+  };
+
   const uploadViaFTP = async () => {
     if (!currentPage) return;
 
