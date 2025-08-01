@@ -522,7 +522,9 @@ function App() {
     setIsDragging(true);
     setSelectedComponent(component);
     
-    const rect = canvasRef.current.getBoundingClientRect();
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
     setDragOffset({
       x: e.clientX - rect.left - component.position.x,
       y: e.clientY - rect.top - component.position.y
