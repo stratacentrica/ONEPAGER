@@ -310,7 +310,11 @@ function App() {
       case 'form':
         return { fields: [{ name: 'email', type: 'email', placeholder: 'Enter your email' }] };
       case 'timer':
-        return { endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() };
+        return { 
+          endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          title: 'Time Remaining',
+          style: 'countdown'
+        };
       case 'audio':
         return { url: '', autoplay: false, loop: false };
       case 'video':
