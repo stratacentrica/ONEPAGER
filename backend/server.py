@@ -290,7 +290,7 @@ async def get_royalty_free_sounds():
     return {"sounds": sounds}
 
 @api_router.post("/pages/{page_id}/export")
-async def export_landing_page(page_id: str, export_request: ExportRequest):
+async def export_landing_page(page_id: str):
     """Export landing page in multiple formats"""
     page = await db.landing_pages.find_one({"id": page_id})
     if not page:
@@ -298,57 +298,19 @@ async def export_landing_page(page_id: str, export_request: ExportRequest):
     
     page_data = LandingPageData(**page)
     
-    if export_request.format == "json":
-        # Export as JSON
-        export_data = {
-            "page": page_data.dict(),
-            "export_date": datetime.utcnow().isoformat(),
-            "format": "json"
-        }
-        return JSONResponse(export_data)
+    # Generate HTML content
+    html_content = generate_html_export(page_data)
     
-    elif export_request.format == "iframe":
-        # Generate iframe embed code
-        iframe_code = f'''<iframe src="{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/preview/{page_id}" 
-                         width="100%" height="600" frameborder="0" scrolling="auto"
-                         style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
-                      </iframe>'''
-        
-        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8')
-        temp_file.write(f'''
-        <!DOCTYPE html>
-        <html>
-        <head><title>Embed Code - {page_data.title}</title></head>
-        <body>
-        <h2>Embed Code for {page_data.title}</h2>
-        <textarea style="width:100%; height:200px;">{iframe_code}</textarea>
-        <hr>
-        <h3>Preview:</h3>
-        {iframe_code}
-        </body>
-        </html>
-        ''')
-        temp_file.close()
-        
-        return FileResponse(
-            temp_file.name,
-            media_type='text/html',
-            filename=f"{page_data.title.replace(' ', '_')}_embed.html"
-        )
+    # Save to temporary file
+    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8')
+    temp_file.write(html_content)
+    temp_file.close()
     
-    else:  # Default to HTML
-        # Generate full HTML content
-        html_content = generate_html_export(page_data)
-        
-        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8')
-        temp_file.write(html_content)
-        temp_file.close()
-        
-        return FileResponse(
-            temp_file.name,
-            media_type='text/html',
-            filename=f"{page_data.title.replace(' ', '_')}.html"
-        )
+    return FileResponse(
+        temp_file.name,
+        media_type='text/html',
+        filename=f"{page_data.title.replace(' ', '_')}.html"
+    )
 
 @api_router.post("/pages/{page_id}/embed-code")
 async def get_embed_code(page_id: str, format: str = "iframe"):
