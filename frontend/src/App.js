@@ -700,16 +700,49 @@ function App() {
       case 'cta-button':
         const ctaType = ctaButtonTypes.find(c => c.id === content.ctaType) || ctaButtonTypes[0];
         const ctaStyle = { ...commonStyle, background: `${ctaType.color}15`, border: `1px solid ${ctaType.color}30` };
+        
+        const handleCTAClick = (e) => {
+          e.stopPropagation();
+          handleComponentClick(component, e);
+          
+          // Handle specific CTA actions
+          switch (content.ctaType) {
+            case 'take-photo':
+              handleCameraCapture(component.id);
+              break;
+            case 'request-call':
+              if (content.phone) {
+                window.open(`tel:${content.phone}`, '_self');
+              } else {
+                alert('📞 Call Request: ' + (content.text || 'Request Call'));
+              }
+              break;
+            case 'email-me':
+              if (content.email) {
+                window.open(`mailto:${content.email}`, '_self');
+              } else {
+                alert('📧 Email: ' + (content.text || 'Email Me'));
+              }
+              break;
+            case 'join-now':
+              alert('🎉 Welcome! Join Now clicked');
+              break;
+            case 'subscribe':
+              alert('🔔 Subscription request: ' + (content.text || 'Subscribe'));
+              break;
+            case 'waitlist':
+              alert('📋 Added to waitlist: ' + (content.text || 'Join Waitlist'));
+              break;
+            default:
+              alert('CTA clicked: ' + (content.text || ctaType.name));
+          }
+        };
+        
         return (
           <button
             key={component.id}
             style={ctaStyle}
-            onClick={(e) => {
-              handleComponentClick(component, e);
-              if (content.ctaType === 'take-photo') {
-                handleCameraCapture(component.id);
-              }
-            }}
+            onClick={handleCTAClick}
             className={`component cta-button ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
             <ctaType.icon size={16} style={{ marginRight: '8px', color: ctaType.color }} />
