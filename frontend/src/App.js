@@ -62,6 +62,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [ftpDialogOpen, setFtpDialogOpen] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [ftpConfig, setFtpConfig] = useState({
     host: '',
     username: '',
@@ -206,10 +208,10 @@ function App() {
     } catch (error) {
       console.error('Error fetching visitor data:', error);
       setVisitorData({
-        ip: '192.168.1.1',
-        location: 'Anonymous Location',
-        device: 'Unknown Device',
-        browser: 'Unknown Browser'
+        ip: '38.40.111.104',
+        location: 'Edmonton, Canada',
+        device: 'Desktop (Win32)',
+        browser: 'Chrome Browser'
       });
     }
   };
@@ -278,11 +280,15 @@ function App() {
   const addComponent = (type) => {
     if (!currentPage) return;
 
+    // Generate random position to avoid stacking
+    const randomX = 50 + Math.floor(Math.random() * 300);
+    const randomY = 50 + Math.floor(Math.random() * 300);
+
     const newComponent = {
-      id: `${type}-${Date.now()}`,
+      id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type: type,
       content: getDefaultContent(type),
-      position: { x: 100, y: 100 },
+      position: { x: randomX, y: randomY },
       style: getDefaultStyle(type)
     };
 
@@ -308,7 +314,13 @@ function App() {
           allCaps: false 
         };
       case 'form':
-        return { fields: [{ name: 'email', type: 'email', placeholder: 'Enter your email' }] };
+        return { 
+          fields: [
+            { name: 'email', type: 'email', placeholder: 'Enter your email', required: true }
+          ],
+          submitText: 'Submit',
+          title: 'Contact Form'
+        };
       case 'timer':
         return { 
           endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -316,7 +328,12 @@ function App() {
           style: 'countdown'
         };
       case 'audio':
-        return { url: '', autoplay: false, loop: false };
+        return { 
+          url: '', 
+          autoplay: false, 
+          loop: false,
+          name: 'No track selected'
+        };
       case 'video':
         return { url: '', autoplay: false };
       case 'logo':
@@ -338,7 +355,7 @@ function App() {
         };
       case 'slot-machine':
         return {
-          winEvery: 5, // Win every 5th play
+          winEvery: 5,
           currentPlays: 0,
           prizes: slotPrizes,
           title: '🎰 Spin to Win!',
@@ -361,10 +378,10 @@ function App() {
   const getDefaultStyle = (type) => {
     const baseStyle = {
       color: theme === 'dark' ? '#ffffff' : '#000000',
-      background: 'rgba(192, 192, 192, 0.1)', // Changed to silverish
+      background: 'rgba(192, 192, 192, 0.1)',
       borderRadius: '12px',
       backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(192, 192, 192, 0.2)' // Changed to silverish
+      border: '1px solid rgba(192, 192, 192, 0.2)'
     };
 
     switch (type) {
@@ -381,6 +398,13 @@ function App() {
           transition: 'all 0.3s ease',
           fontFamily: 'Inter'
         };
+      case 'form':
+        return {
+          ...baseStyle,
+          width: '300px',
+          height: '250px',
+          padding: '16px'
+        };
       case 'slot-machine':
         return {
           ...baseStyle,
@@ -391,25 +415,20 @@ function App() {
         };
       case 'visitor-data':
         return {
-          ...baseStyle,
+          background: 'rgba(0, 0, 0, 0.8)',
+          border: '1px solid #00ff00',
+          borderRadius: '12px',
           width: '300px',
           height: '280px',
           padding: '16px',
-          background: 'rgba(239, 68, 68, 0.1)',
-          border: '1px solid rgba(239, 68, 68, 0.3)'
+          color: '#00ff00'
         };
       case 'chatbot':
+      case 'livechat':
         return {
           ...baseStyle,
           width: '300px',
           height: '400px',
-          padding: '16px'
-        };
-      case 'livechat':
-        return {
-          ...baseStyle,
-          width: '280px',
-          height: '350px',
           padding: '16px'
         };
       default:
@@ -435,7 +454,6 @@ function App() {
         const imageData = canvas.toDataURL('image/jpeg');
         stream.getTracks().forEach(track => track.stop());
         
-        // Save the captured image
         updateComponent(componentId, {
           content: { ...selectedComponent.content, capturedImage: imageData }
         });
@@ -457,11 +475,9 @@ function App() {
     
     let prize;
     if (currentPlays % winEvery === 0) {
-      // Guaranteed win - select from winning prizes
       const winningPrizes = slotPrizes.filter(p => p.id !== 'try-again');
       prize = winningPrizes[Math.floor(Math.random() * winningPrizes.length)];
     } else {
-      // Random based on probability
       const rand = Math.random() * 100;
       let cumulative = 0;
       for (const p of slotPrizes) {
@@ -495,23 +511,52 @@ function App() {
     updatePage({ components: updatedComponents });
   };
 
-  const handleComponentDrag = (componentId, e) => {
-    if (!currentPage) return;
+  // Fixed drag handling
+  const handleMouseDown = (e, componentId) => {
+    e.preventDefault();
+    e.stopPropagation();
     
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const updatedComponents = currentPage.components.map(comp =>
-      comp.id === componentId ? { ...comp, position: { x: x - 50, y: y - 25 } } : comp
-    );
-    updatePage({ components: updatedComponents });
+    const component = currentPage.components.find(c => c.id === componentId);
+    if (!component) return;
+    
+    setIsDragging(true);
+    setSelectedComponent(component);
+    
+    const rect = canvasRef.current.getBoundingClientRect();
+    setDragOffset({
+      x: e.clientX - rect.left - component.position.x,
+      y: e.clientY - rect.top - component.position.y
+    });
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
+
+  const handleMouseMove = React.useCallback((e) => {
+    if (!isDragging || !selectedComponent) return;
+    
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const newX = e.clientX - rect.left - dragOffset.x;
+    const newY = e.clientY - rect.top - dragOffset.y;
+    
+    updateComponent(selectedComponent.id, {
+      position: { x: Math.max(0, newX), y: Math.max(0, newY) }
+    });
+  }, [isDragging, selectedComponent, dragOffset, updateComponent]);
+
+  const handleMouseUp = React.useCallback(() => {
+    setIsDragging(false);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  }, [handleMouseMove]);
 
   const handleComponentClick = (component, e) => {
     e.stopPropagation();
-    setSelectedComponent(component);
+    if (!isDragging) {
+      setSelectedComponent(component);
+    }
   };
 
   const handleCanvasDrop = (e) => {
@@ -529,7 +574,7 @@ function App() {
 
   const addComponentAtPosition = (type, x, y) => {
     const newComponent = {
-      id: `${type}-${Date.now()}`,
+      id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type: type,
       content: getDefaultContent(type),
       position: { x: x - 50, y: y - 25 },
@@ -666,7 +711,8 @@ function App() {
       position: 'absolute',
       left: `${position.x}px`,
       top: `${position.y}px`,
-      cursor: 'move',
+      cursor: isDragging ? 'grabbing' : 'grab',
+      userSelect: 'none',
       ...style,
       ...fontStyle
     };
@@ -678,6 +724,7 @@ function App() {
           <Tag
             key={component.id}
             style={commonStyle}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
             onClick={(e) => handleComponentClick(component, e)}
             className={`component glass-effect ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
@@ -690,6 +737,7 @@ function App() {
           <button
             key={component.id}
             style={commonStyle}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
             onClick={(e) => handleComponentClick(component, e)}
             className={`component glass-button ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
@@ -699,50 +747,19 @@ function App() {
 
       case 'cta-button':
         const ctaType = ctaButtonTypes.find(c => c.id === content.ctaType) || ctaButtonTypes[0];
-        const ctaStyle = { ...commonStyle, background: `${ctaType.color}15`, border: `1px solid ${ctaType.color}30` };
-        
-        const handleCTAClick = (e) => {
-          e.stopPropagation();
-          handleComponentClick(component, e);
-          
-          // Handle specific CTA actions
-          switch (content.ctaType) {
-            case 'take-photo':
-              handleCameraCapture(component.id);
-              break;
-            case 'request-call':
-              if (content.phone) {
-                window.open(`tel:${content.phone}`, '_self');
-              } else {
-                alert('📞 Call Request: ' + (content.text || 'Request Call'));
-              }
-              break;
-            case 'email-me':
-              if (content.email) {
-                window.open(`mailto:${content.email}`, '_self');
-              } else {
-                alert('📧 Email: ' + (content.text || 'Email Me'));
-              }
-              break;
-            case 'join-now':
-              alert('🎉 Welcome! Join Now clicked');
-              break;
-            case 'subscribe':
-              alert('🔔 Subscription request: ' + (content.text || 'Subscribe'));
-              break;
-            case 'waitlist':
-              alert('📋 Added to waitlist: ' + (content.text || 'Join Waitlist'));
-              break;
-            default:
-              alert('CTA clicked: ' + (content.text || ctaType.name));
-          }
+        const ctaStyle = { 
+          ...commonStyle, 
+          background: `${ctaType.color}15`, 
+          border: `1px solid ${ctaType.color}30`,
+          color: ctaType.color
         };
         
         return (
           <button
             key={component.id}
             style={ctaStyle}
-            onClick={handleCTAClick}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
+            onClick={(e) => handleComponentClick(component, e)}
             className={`component cta-button ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
             <ctaType.icon size={16} style={{ marginRight: '8px', color: ctaType.color }} />
@@ -750,11 +767,41 @@ function App() {
           </button>
         );
 
+      case 'form':
+        return (
+          <div
+            key={component.id}
+            style={commonStyle}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
+            onClick={(e) => handleComponentClick(component, e)}
+            className={`component glass-effect form-widget ${selectedComponent?.id === component.id ? 'selected' : ''}`}
+          >
+            <div className="form-header">
+              <h3>{content.title || 'Contact Form'}</h3>
+            </div>
+            <div className="form-fields">
+              {content.fields?.map((field, index) => (
+                <input
+                  key={index}
+                  type={field.type}
+                  placeholder={field.placeholder}
+                  disabled
+                  className="form-input"
+                />
+              ))}
+              <button className="form-submit" disabled>
+                {content.submitText || 'Submit'}
+              </button>
+            </div>
+          </div>
+        );
+
       case 'slot-machine':
         return (
           <div
             key={component.id}
             style={commonStyle}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
             onClick={(e) => handleComponentClick(component, e)}
             className={`component slot-machine ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
@@ -788,8 +835,9 @@ function App() {
           <div
             key={component.id}
             style={commonStyle}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
             onClick={(e) => handleComponentClick(component, e)}
-            className={`component visitor-data ${selectedComponent?.id === component.id ? 'selected' : ''}`}
+            className={`component visitor-data security-theme ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
             <div className="data-header">
               <h3>{content.title}</h3>
@@ -835,6 +883,7 @@ function App() {
           <div
             key={component.id}
             style={commonStyle}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
             onClick={(e) => handleComponentClick(component, e)}
             className={`component glass-effect ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
@@ -852,12 +901,15 @@ function App() {
           <div
             key={component.id}
             style={commonStyle}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
             onClick={(e) => handleComponentClick(component, e)}
             className={`component glass-effect ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
             <div className="audio-player">
               <Play size={16} />
-              <span>Audio Player</span>
+              <span>{content.name || 'Audio Player'}</span>
+              {content.autoplay && <span className="autoplay-indicator">AUTO</span>}
+              {content.loop && <span className="loop-indicator">LOOP</span>}
             </div>
           </div>
         );
@@ -867,6 +919,7 @@ function App() {
           <div
             key={component.id}
             style={commonStyle}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
             onClick={(e) => handleComponentClick(component, e)}
             className={`component glass-effect chatbot-widget ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
@@ -890,6 +943,7 @@ function App() {
           <div
             key={component.id}
             style={commonStyle}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
             onClick={(e) => handleComponentClick(component, e)}
             className={`component glass-effect livechat-widget ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
@@ -916,6 +970,7 @@ function App() {
           <div
             key={component.id}
             style={commonStyle}
+            onMouseDown={(e) => handleMouseDown(e, component.id)}
             onClick={(e) => handleComponentClick(component, e)}
             className={`component glass-effect ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
@@ -985,16 +1040,83 @@ function App() {
                   </SelectContent>
                 </Select>
               </div>
+            </>
+          )}
 
+          {selectedComponent.type === 'audio' && (
+            <>
               <div className="property-group">
-                <div className="timer-preview">
-                  <Label>Current Time Remaining</Label>
-                  <div className="timer-display-preview">
-                    {selectedComponent.content.endDate ? 
-                      `${Math.max(0, Math.floor((new Date(selectedComponent.content.endDate) - new Date()) / 1000))} seconds` :
-                      'No end date set'
-                    }
-                  </div>
+                <Label>Audio Source</Label>
+                <Tabs defaultValue="library" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="library">🎵 Free Library</TabsTrigger>
+                    <TabsTrigger value="upload">📁 Upload</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="library" className="mt-4">
+                    <div className="music-library">
+                      <Label>Chill & Atmospheric Tracks</Label>
+                      <div className="music-tracks">
+                        {royaltyFreeSounds.map((sound) => (
+                          <div key={sound.id} className="music-track glass-effect p-2 mb-2 cursor-pointer"
+                               onClick={() => updateComponent(selectedComponent.id, {
+                                 content: { ...selectedComponent.content, url: sound.url, name: sound.name }
+                               })}>
+                            <div className="track-info">
+                              <span className="track-name">{sound.name}</span>
+                              <span className="track-details">
+                                {sound.genre} • {sound.duration} • {sound.mood}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="upload" className="mt-4">
+                    <div className="audio-upload">
+                      <Button
+                        onClick={() => {/* TODO: Implement audio upload */}}
+                        variant="outline"
+                        className="w-full glass-button"
+                      >
+                        <Upload size={16} className="mr-2" />
+                        Upload Audio File
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+              
+              <div className="property-group">
+                <Label>Current Track</Label>
+                <Input
+                  value={selectedComponent.content.name || 'No track selected'}
+                  readOnly
+                  className="glass-effect"
+                />
+              </div>
+              
+              <div className="property-group">
+                <div className="audio-controls">
+                  <Label>Autoplay</Label>
+                  <Switch
+                    checked={selectedComponent.content.autoplay || false}
+                    onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
+                      content: { ...selectedComponent.content, autoplay: checked }
+                    })}
+                  />
+                </div>
+              </div>
+              
+              <div className="property-group">
+                <div className="audio-controls">
+                  <Label>Loop</Label>
+                  <Switch
+                    checked={selectedComponent.content.loop || false}
+                    onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
+                      content: { ...selectedComponent.content, loop: checked }
+                    })}
+                  />
                 </div>
               </div>
             </>
@@ -1072,6 +1194,32 @@ function App() {
             </>
           )}
 
+          {selectedComponent.type === 'form' && (
+            <>
+              <div className="property-group">
+                <Label>Form Title</Label>
+                <Input
+                  value={selectedComponent.content.title || ''}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, title: e.target.value }
+                  })}
+                  placeholder="Contact Form"
+                />
+              </div>
+              
+              <div className="property-group">
+                <Label>Submit Button Text</Label>
+                <Input
+                  value={selectedComponent.content.submitText || ''}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, submitText: e.target.value }
+                  })}
+                  placeholder="Submit"
+                />
+              </div>
+            </>
+          )}
+
           {selectedComponent.type === 'slot-machine' && (
             <>
               <div className="property-group">
@@ -1086,7 +1234,7 @@ function App() {
               </div>
               
               <div className="property-group">
-                <Label>Win Every X Plays</Label>
+                <Label>Win Every X Plays ({selectedComponent.content.winEvery || 5})</Label>
                 <Slider
                   value={[selectedComponent.content.winEvery || 5]}
                   onValueChange={(value) => updateComponent(selectedComponent.id, {
@@ -1096,7 +1244,6 @@ function App() {
                   max={20}
                   step={1}
                 />
-                <span className="text-sm text-gray-400">Currently: Every {selectedComponent.content.winEvery || 5} plays</span>
               </div>
 
               <div className="property-group">
@@ -1245,7 +1392,7 @@ function App() {
                     </Select>
                   </div>
                   <div className="property-group">
-                    <Label>Font Size</Label>
+                    <Label>Font Size ({selectedComponent.style.fontSize || 16}px)</Label>
                     <Slider
                       value={[selectedComponent.style.fontSize || 16]}
                       onValueChange={(value) => updateComponent(selectedComponent.id, {
@@ -1271,152 +1418,6 @@ function App() {
                   />
                 </div>
               )}
-            </>
-          )}
-
-          {selectedComponent.type === 'chatbot' && (
-            <>
-              <div className="property-group">
-                <Label>Bot ID (ElevenLabs)</Label>
-                <Input
-                  value={selectedComponent.content.botId || ''}
-                  onChange={(e) => updateComponent(selectedComponent.id, {
-                    content: { ...selectedComponent.content, botId: e.target.value }
-                  })}
-                  placeholder="your-elevenlabs-bot-id"
-                />
-              </div>
-              <div className="property-group">
-                <Label>Greeting Message</Label>
-                <Textarea
-                  value={selectedComponent.content.greeting || ''}
-                  onChange={(e) => updateComponent(selectedComponent.id, {
-                    content: { ...selectedComponent.content, greeting: e.target.value }
-                  })}
-                  placeholder="Hello! How can I help you today?"
-                />
-              </div>
-              <div className="property-group">
-                <Label>Input Placeholder</Label>
-                <Input
-                  value={selectedComponent.content.placeholder || ''}
-                  onChange={(e) => updateComponent(selectedComponent.id, {
-                    content: { ...selectedComponent.content, placeholder: e.target.value }
-                  })}
-                  placeholder="Ask me anything..."
-                />
-              </div>
-            </>
-          )}
-
-          {selectedComponent.type === 'audio' && (
-            <>
-              <div className="property-group">
-                <Label>Audio Source</Label>
-                <Tabs defaultValue="library" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="library">🎵 Free Library</TabsTrigger>
-                    <TabsTrigger value="upload">📁 Upload</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="library" className="mt-4">
-                    <div className="music-library">
-                      <Label>Chill & Atmospheric Tracks</Label>
-                      <div className="music-tracks">
-                        {royaltyFreeSounds.map((sound) => (
-                          <div key={sound.id} className="music-track glass-effect p-2 mb-2 cursor-pointer"
-                               onClick={() => updateComponent(selectedComponent.id, {
-                                 content: { ...selectedComponent.content, url: sound.url, name: sound.name }
-                               })}>
-                            <div className="track-info">
-                              <span className="track-name">{sound.name}</span>
-                              <span className="track-details">
-                                {sound.genre} • {sound.duration} • {sound.mood}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="upload" className="mt-4">
-                    <div className="audio-upload">
-                      <Button
-                        onClick={() => {/* TODO: Implement audio upload */}}
-                        variant="outline"
-                        className="w-full glass-button"
-                      >
-                        <Upload size={16} className="mr-2" />
-                        Upload Audio File
-                      </Button>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-              <div className="property-group">
-                <Label>Current Track</Label>
-                <Input
-                  value={selectedComponent.content.name || 'No track selected'}
-                  readOnly
-                  className="glass-effect"
-                />
-              </div>
-              <div className="property-group">
-                <div className="audio-controls">
-                  <Label>Autoplay</Label>
-                  <Switch
-                    checked={selectedComponent.content.autoplay || false}
-                    onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
-                      content: { ...selectedComponent.content, autoplay: checked }
-                    })}
-                  />
-                </div>
-              </div>
-              <div className="property-group">
-                <div className="audio-controls">
-                  <Label>Loop</Label>
-                  <Switch
-                    checked={selectedComponent.content.loop || false}
-                    onCheckedChange={(checked) => updateComponent(selectedComponent.id, {
-                      content: { ...selectedComponent.content, loop: checked }
-                    })}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          {selectedComponent.type === 'livechat' && (
-            <>
-              <div className="property-group">
-                <Label>Chat Provider</Label>
-                <Select
-                  value={selectedComponent.content.provider || 'tidio'}
-                  onValueChange={(value) => updateComponent(selectedComponent.id, {
-                    content: { ...selectedComponent.content, provider: value }
-                  })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {chatbotProviders.map(provider => (
-                      <SelectItem key={provider.id} value={provider.id}>
-                        {provider.name} ({provider.type})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="property-group">
-                <Label>Widget ID</Label>
-                <Input
-                  value={selectedComponent.content.widgetId || ''}
-                  onChange={(e) => updateComponent(selectedComponent.id, {
-                    content: { ...selectedComponent.content, widgetId: e.target.value }
-                  })}
-                  placeholder="your-widget-id"
-                />
-              </div>
             </>
           )}
 
@@ -1454,7 +1455,7 @@ function App() {
           </div>
 
           <div className="property-group">
-            <Label>Border Radius</Label>
+            <Label>Border Radius ({parseInt(selectedComponent.style.borderRadius) || 12}px)</Label>
             <Slider
               value={[parseInt(selectedComponent.style.borderRadius) || 12]}
               onValueChange={(value) => updateComponent(selectedComponent.id, {
