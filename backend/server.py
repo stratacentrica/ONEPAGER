@@ -420,37 +420,40 @@ def generate_html_export(page_data: LandingPageData) -> str:
     components_html = ""
     
     for component in page_data.components:
+        # Convert ComponentData object to dict for easier access
+        comp_dict = component.dict() if hasattr(component, 'dict') else component
+        
         component_style = f"""
             position: absolute; 
-            left: {component['position']['x']}px; 
-            top: {component['position']['y']}px;
-            background: {component['style'].get('background', 'rgba(192,192,192,0.1)')};
-            color: {component['style'].get('color', '#ffffff')};
-            border-radius: {component['style'].get('borderRadius', '12px')};
+            left: {comp_dict['position']['x']}px; 
+            top: {comp_dict['position']['y']}px;
+            background: {comp_dict['style'].get('background', 'rgba(192,192,192,0.1)')};
+            color: {comp_dict['style'].get('color', '#ffffff')};
+            border-radius: {comp_dict['style'].get('borderRadius', '12px')};
             backdrop-filter: blur(12px);
             border: 1px solid rgba(192,192,192,0.2);
-            font-family: {component['content'].get('fontFamily', 'Inter')};
-            text-transform: {'uppercase' if component['content'].get('allCaps') else 'none'};
+            font-family: {comp_dict['content'].get('fontFamily', 'Inter')};
+            text-transform: {'uppercase' if comp_dict['content'].get('allCaps') else 'none'};
         """
         
-        if component['type'] == 'text':
-            tag = component['content'].get('tag', 'p')
-            font_size = component['style'].get('fontSize', '16')
+        if comp_dict['type'] == 'text':
+            tag = comp_dict['content'].get('tag', 'p')
+            font_size = comp_dict['style'].get('fontSize', '16')
             components_html += f'''
             <{tag} style="{component_style} font-size: {font_size}px; padding: 12px;">
-                {component['content'].get('text', '')}
+                {comp_dict['content'].get('text', '')}
             </{tag}>'''
             
-        elif component['type'] == 'button':
+        elif comp_dict['type'] == 'button':
             components_html += f'''
             <button style="{component_style} padding: 12px 24px; cursor: pointer; font-size: 14px; font-weight: 500;"
-                    onclick="{component['content'].get('action', '')}"
+                    onclick="{comp_dict['content'].get('action', '')}"
                     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.2)';"
                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                {component['content'].get('text', 'Button')}
+                {comp_dict['content'].get('text', 'Button')}
             </button>'''
             
-        elif component['type'] == 'chatbot':
+        elif comp_dict['type'] == 'chatbot':
             components_html += f'''
             <div style="{component_style} width: 300px; height: 400px; padding: 16px; display: flex; flex-direction: column;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #60a5fa;">
@@ -458,16 +461,16 @@ def generate_html_export(page_data: LandingPageData) -> str:
                     <span>ElevenLabs AI</span>
                 </div>
                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                    <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 16px;">{component['content'].get('greeting', 'Hello! How can I help you today?')}</p>
+                    <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 16px;">{comp_dict['content'].get('greeting', 'Hello! How can I help you today?')}</p>
                     <div style="display: flex; gap: 8px;">
-                        <input style="flex: 1; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #ffffff;" placeholder="{component['content'].get('placeholder', 'Ask me anything...')}" />
+                        <input style="flex: 1; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #ffffff;" placeholder="{comp_dict['content'].get('placeholder', 'Ask me anything...')}" />
                         <button style="padding: 8px; background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); border: none; border-radius: 8px; color: #ffffff; cursor: pointer;">⚡</button>
                     </div>
                 </div>
             </div>'''
             
-        elif component['type'] == 'livechat':
-            provider_name = component['content'].get('provider', 'tidio').title()
+        elif comp_dict['type'] == 'livechat':
+            provider_name = comp_dict['content'].get('provider', 'tidio').title()
             components_html += f'''
             <div style="{component_style} width: 280px; height: 350px; padding: 16px; display: flex; flex-direction: column;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #60a5fa;">
