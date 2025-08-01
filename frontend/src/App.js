@@ -570,35 +570,18 @@ function App() {
 
     try {
       setIsLoading(true);
-      const response = await axios.post(`${API_BASE_URL}/api/pages/${currentPage.id}/export`, {
-        page_id: currentPage.id,
-        format: format
-      }, {
-        responseType: format === 'json' ? 'json' : 'blob'
+      const response = await axios.post(`${API_BASE_URL}/api/pages/${currentPage.id}/export`, {}, {
+        responseType: 'blob'
       });
       
-      if (format === 'json') {
-        // For JSON, create a downloadable file
-        const jsonStr = JSON.stringify(response.data, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${currentPage.title.replace(' ', '_')}.json`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-      } else {
-        // For HTML and iframe formats
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        const extension = format === 'iframe' ? '_embed.html' : '.html';
-        link.setAttribute('download', `${currentPage.title.replace(' ', '_')}${extension}`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-      }
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const extension = format === 'iframe' ? '_embed.html' : '.html';
+      link.setAttribute('download', `${currentPage.title.replace(' ', '_')}${extension}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
       
       alert(`✅ ${format.toUpperCase()} export completed successfully!`);
     } catch (error) {
