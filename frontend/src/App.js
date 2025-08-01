@@ -880,6 +880,63 @@ function App() {
         </div>
 
         <div className="properties-content">
+          {selectedComponent.type === 'timer' && (
+            <>
+              <div className="property-group">
+                <Label>Timer End Date & Time</Label>
+                <Input
+                  type="datetime-local"
+                  value={selectedComponent.content.endDate ? new Date(selectedComponent.content.endDate).toISOString().slice(0, 16) : ''}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, endDate: new Date(e.target.value).toISOString() }
+                  })}
+                />
+              </div>
+              
+              <div className="property-group">
+                <Label>Timer Title</Label>
+                <Input
+                  value={selectedComponent.content.title || 'Time Remaining'}
+                  onChange={(e) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, title: e.target.value }
+                  })}
+                  placeholder="Time Remaining"
+                />
+              </div>
+
+              <div className="property-group">
+                <Label>Timer Style</Label>
+                <Select
+                  value={selectedComponent.content.style || 'countdown'}
+                  onValueChange={(value) => updateComponent(selectedComponent.id, {
+                    content: { ...selectedComponent.content, style: value }
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="countdown">⏰ Countdown</SelectItem>
+                    <SelectItem value="clock">🕐 Clock</SelectItem>
+                    <SelectItem value="digital">🔢 Digital</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="property-group">
+                <div className="timer-preview">
+                  <Label>Current Time Remaining</Label>
+                  <div className="timer-display-preview">
+                    {selectedComponent.content.endDate ? 
+                      `${Math.max(0, Math.floor((new Date(selectedComponent.content.endDate) - new Date()) / 1000))} seconds` :
+                      'No end date set'
+                    }
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           {selectedComponent.type === 'cta-button' && (
             <>
               <div className="property-group">
