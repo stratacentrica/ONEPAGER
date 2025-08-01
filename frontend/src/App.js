@@ -770,6 +770,30 @@ function App() {
         );
 
       case 'timer':
+        const TimeCounter = () => {
+          const [timeLeft, setTimeLeft] = useState('00:00:00');
+          
+          useEffect(() => {
+            const interval = setInterval(() => {
+              if (content.endDate) {
+                const now = new Date();
+                const end = new Date(content.endDate);
+                const diff = Math.max(0, end - now);
+                
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                setTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+              }
+            }, 1000);
+            
+            return () => clearInterval(interval);
+          }, [content.endDate]);
+          
+          return timeLeft;
+        };
+        
         return (
           <div
             key={component.id}
@@ -778,8 +802,10 @@ function App() {
             className={`component glass-effect ${selectedComponent?.id === component.id ? 'selected' : ''}`}
           >
             <div className="timer-display">
-              <div className="timer-value">00:00:00</div>
-              <div className="timer-label">Time Remaining</div>
+              <div className="timer-value">
+                <TimeCounter />
+              </div>
+              <div className="timer-label">{content.title || 'Time Remaining'}</div>
             </div>
           </div>
         );
