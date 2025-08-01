@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 
 class ONEderpageAPITester:
-    def __init__(self, base_url="https://697b1230-743f-4af4-9f6f-4e7df73396ef.preview.emergentagent.com"):
+    def __init__(self, base_url="https://1baa38e9-452f-4256-a41a-21b056acb52c.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
